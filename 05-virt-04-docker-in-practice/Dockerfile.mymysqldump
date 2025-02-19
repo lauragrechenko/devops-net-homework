@@ -1,0 +1,8 @@
+FROM schnitzler/mysqldump:latest
+
+RUN apk update && apk add --no-cache \
+    mariadb-connector-c-dev \
+    && rm -rf /var/cache/apk/*
+
+RUN ls /usr/lib/mariadb/plugin/caching_sha2_password.so || echo "Plugin not found"
+

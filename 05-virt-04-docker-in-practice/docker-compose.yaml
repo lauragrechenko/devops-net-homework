@@ -1,0 +1,16 @@
+services:
+  cron:
+    image: lauragrechenko/mysqldump-fixed
+    restart: always
+    volumes:
+      - ./bin/crontab:/var/spool/cron/crontabs/root  # Load cron jobs
+      - ./bin/backup:/usr/local/bin/backup  # Backup script
+      - /opt/backup:/backup  # Store backups
+      - .env:/env/.env # Mount .env file
+
+    env_file: .env
+    networks:
+      - shvirtd-example-python_backend
+networks:
+  shvirtd-example-python_backend:
+    external: true
