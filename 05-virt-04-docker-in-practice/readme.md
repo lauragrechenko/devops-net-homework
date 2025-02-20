@@ -1,12 +1,14 @@
 # Задача 1
 ### 1-2. Создали fork репозиторий и `Dockerfile.python`.
 [Ссылка на fork репозиторий](https://github.com/lauragrechenko/shvirtd-example-python)
+
 [Ссылка на Dockerfile.python](https://github.com/lauragrechenko/shvirtd-example-python/blob/1f5db713c54f50c6e8b075e47cdc9b854d29d37c/Dockerfile.python)
 
 -------------------
 
 ### 3. Запустили web-приложение без использования docker
 ![alt text](image-6.png)
+
 ![alt text](image-5.png)
 
 ### 4. Задали имя используемой таблицы через ENV переменную `DB_TABLE`
@@ -23,6 +25,7 @@
 # Задача 3
 ### Создали compose-проект согласно описанной схеме. Результат работы SQL:
 ![alt text](image-1.png)
+
 ![alt text](image-2.png)
 
 -------------------
@@ -30,6 +33,7 @@
 # Задача 4
 ### Запустили в YC ВМ, прогнали трафик. Результат работы SQL:
 ![alt text](image-3.png)
+
 ![alt text](image-4.png)
 
 [Ссылка на fork репозиторий](https://github.com/lauragrechenko/shvirtd-example-python)
@@ -97,10 +101,13 @@ networks:
 # Задача 6 
 ### Используя `Dive` нашли слой, в котором добавляется `Terraform`, запомнили `digest = da25c3c268493bc8d...`
 ![alt text](<Screenshot from 2025-02-20 14-22-24.png>) 
+
 ### Используя `Docker save`, сохранили образ `Terraform` в архив tar:
 ![alt text](<Screenshot from 2025-02-20 14-40-02.png>)
+
 ### Нашли нужный слой `da25c3c268493bc8d...`
 ![alt text](<Screenshot from 2025-02-20 14-40-31.png>)
+
 ### Нашли и запустили `bin\terraform'
 ![alt text](<Screenshot from 2025-02-20 14-41-18.png>)
 
@@ -111,5 +118,6 @@ networks:
 # Задача 6.2
 ### Извлекли файл из контейнера, используя только команду docker build и Dockerfile. 
 ![alt text](<Screenshot from 2025-02-20 15-18-38.png>)
+
 ### Запустили `bin\terraform'
 ![alt text](<Screenshot from 2025-02-20 15-19-52.png>)
