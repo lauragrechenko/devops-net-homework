@@ -1,6 +1,7 @@
 # Задача 1
 ### 1-2. Создали fork репозиторий и `Dockerfile.python`.
 [Ссылка на fork репозиторий](https://github.com/lauragrechenko/shvirtd-example-python)
+[Ссылка на Dockerfile.python](https://github.com/lauragrechenko/shvirtd-example-python/blob/1f5db713c54f50c6e8b075e47cdc9b854d29d37c/Dockerfile.python)
 
 -------------------
 
@@ -9,6 +10,7 @@
 ![alt text](image-5.png)
 
 ### 4. Задали имя используемой таблицы через ENV переменную `DB_TABLE`
+[Ссылка на main.py](https://github.com/lauragrechenko/shvirtd-example-python/blob/main/main.py#L12)
 
 -------------------
 
@@ -33,6 +35,8 @@
 [Ссылка на fork репозиторий](https://github.com/lauragrechenko/shvirtd-example-python)
 
 [Ссылка на bash скрипт](https://github.com/lauragrechenko/shvirtd-example-python/blob/main/setup.sh)
+
+[Ссылка на compose.yaml](https://github.com/lauragrechenko/shvirtd-example-python/blob/1f5db713c54f50c6e8b075e47cdc9b854d29d37c/compose.yaml)
 
 -------------------
 
