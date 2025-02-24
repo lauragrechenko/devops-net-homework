@@ -120,6 +120,14 @@ service-account-key:
   private_key: ****
 cloud-id: b1g4vhp2shscb9od4rnn
 folder-id: b1g4vhp2shscb9od4rnn
+
+### Добавили service-account данные в переменные среды::
+```
+export YC_TOKEN=$(yc iam create-token)
+export YC_CLOUD_ID=$(yc config get cloud-id)
+export YC_FOLDER_ID=$(yc config get folder-id)
+```
+
 ```
 ### 1. Создали в облаке *ВМ через web-консоль.
 ### 2. Подключились к ВМ по ssh и установили стек docker.
