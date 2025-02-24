@@ -66,6 +66,8 @@ resource "docker_container" "nginx" {
 }
 ```
 
+[Ссылка на `main.tf`](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-01/src/main.tf)
+
 ### 5. Выполнили код и проверили запущенный docker-resource.
 ![alt text](screenshots/image-3.png)
 
