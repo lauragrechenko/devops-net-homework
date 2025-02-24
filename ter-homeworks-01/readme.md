@@ -141,7 +141,7 @@ docker_container.mysql8: Creation complete after 1m21s [id=e0b12bb0c59ed3229ef65
 
 Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
 ```
-[Ссылка на `main.tf`]()
+[Ссылка на `main.tf`](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-01/src2/main.tf)
 
 ### 6. Зашли на ВМ , подключились к контейнеру и проверили наличие секретных env-переменных с помощью команды env.
 
