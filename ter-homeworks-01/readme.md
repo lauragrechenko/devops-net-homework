@@ -90,7 +90,7 @@ resource "docker_container" "nginx" {
 ### 8. Проверили, что docker-образ nginx:latest не был удалён.
 Настроена опция `keep_locally = true`, поэтому Docker-образ `nginx:latest` не был удален из локального Docker-хранилища при выполнении `terraform destroy`. Это позволяет избежать повторного скачивания образа и ускоряет развёртывание.
 
-[Ссылка на документацию](ttps://docs.comcloud.xyz/providers/kreuzwerker/docker/latest/docs/resources/image#:~:text=keep_locally%20(Boolean)%20If%20true%2C%20then%20the%20Docker%20image%20won%27t%20be%20deleted%20on%20destroy%20operation.%20If%20this%20is%20false%2C%20it%20will%20delete%20the%20image%20from%20the%20docker%20local%20storage%20on%20destroy%20operation)
+[Ссылка на документацию](https://docs.comcloud.xyz/providers/kreuzwerker/docker/latest/docs/resources/image#:~:text=keep_locally%20(Boolean)%20If%20true%2C%20then%20the%20Docker%20image%20won%27t%20be%20deleted%20on%20destroy%20operation.%20If%20this%20is%20false%2C%20it%20will%20delete%20the%20image%20from%20the%20docker%20local%20storage%20on%20destroy%20operation)
 
 --------------------
 # Задание 2
