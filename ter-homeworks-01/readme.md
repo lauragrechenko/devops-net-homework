@@ -106,6 +106,7 @@ service_account_id: ajef76a4nps3asoeifqd
 created_at: "2025-02-24T12:42:06.668661870Z"
 key_algorithm: RSA_2048
 ```
+
 ### Настроили профиль CLI для запуска операций от имени service-account:
 ```
 laura-grechenko@Awesome-7560:~/learning/devops/net-course/devops-net-homework$ yc config profile create net-devops-terraform
@@ -120,6 +121,7 @@ service-account-key:
   private_key: ****
 cloud-id: b1g4vhp2shscb9od4rnn
 folder-id: b1g4vhp2shscb9od4rnn
+```
 
 ### Добавили service-account данные в переменные среды::
 ```
@@ -128,13 +130,13 @@ export YC_CLOUD_ID=$(yc config get cloud-id)
 export YC_FOLDER_ID=$(yc config get folder-id)
 ```
 
-```
 ### 1. Создали в облаке *ВМ через web-консоль.
 ### 2. Подключились к ВМ по ssh и установили стек docker.
 ```*
 admin@compute-vm-2-2-10-ssd-1740334729258:~$ docker --version
 Docker version 28.0.0, build f9ced58
 ```
+
 ### 3. Настроили подключение terraform на рабочей станции к remote docker context ВМ через ssh.
 ####  Создали новый context `remote-vm` и настроили SSH-доступ через ~/.ssh/config
 ```
