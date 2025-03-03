@@ -26,8 +26,6 @@ variable "folder_id" {
   description = "https://cloud.yandex.ru/docs/resource-manager/operations/folder/get-id"
 }
 
-### VPC Network
-
 variable "default_zone" {
   type        = string
   default     = "ru-central1-a"
@@ -58,31 +56,12 @@ variable "vpc_name" {
   description = "VPC network & subnet name"
 }
 
-### VPC Gateway
-
-variable "vpc_gateway_name" {
-  type        = string
-  default     = "nat-gateway"
-  description = "Name of the VPC Gateway"
-}
-
-variable "vpc_route_table_name" {
-  type        = string
-  default     = "test-route-table"
-  description = "Name of the route table."
-}
-
-variable "vpc_route_table_destination_prefix" {
-  type        = string
-  default     = "0.0.0.0/0"
-  description = "Route prefix in CIDR notation."
-}
-
 variable "vm_image_family" {
   type        = string
   default     = "ubuntu-2004-lts"
   description = "OS image family for VM instances"
 }
+
 
 ### Task 8
 

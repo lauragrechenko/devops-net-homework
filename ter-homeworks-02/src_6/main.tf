@@ -7,7 +7,6 @@ resource "yandex_vpc_subnet" "develop" {
   zone           = var.default_zone
   network_id     = yandex_vpc_network.develop.id
   v4_cidr_blocks = var.default_cidr
-  route_table_id = yandex_vpc_route_table.rt.id
 }
 
 resource "yandex_vpc_subnet" "db" {
@@ -15,25 +14,8 @@ resource "yandex_vpc_subnet" "db" {
   zone           = var.zone_b
   network_id     = yandex_vpc_network.develop.id
   v4_cidr_blocks = var.db_subnet_cidr
-  route_table_id = yandex_vpc_route_table.rt.id
 }
 
-resource "yandex_vpc_gateway" "nat_gateway" {
-  folder_id = var.folder_id
-  name      = var.vpc_gateway_name
-  shared_egress_gateway {}
-}
-
-resource "yandex_vpc_route_table" "rt" {
-  folder_id  = var.folder_id
-  name       = var.vpc_route_table_name
-  network_id = yandex_vpc_network.develop.id
-
-  static_route {
-    destination_prefix = var.vpc_route_table_destination_prefix
-    gateway_id         = yandex_vpc_gateway.nat_gateway.id
-  }
-}
 
 data "yandex_compute_image" "ubuntu" {
   family = var.vm_image_family

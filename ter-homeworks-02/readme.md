@@ -56,6 +56,7 @@ resource "yandex_compute_instance" "platform" {
 
 ### Успешно выполнили код и проверили созданные ресурсы
 ![VM-1](./screenshots/image-1.png)
+
 ![VM-2](./screenshots/image-2.png)
 
 ### 5. Подключились к консоли ВМ через ssh и выполнили команду `curl ifconfig.me`
@@ -96,8 +97,25 @@ resource "yandex_compute_instance" "platform" {
 
 # Задание 4
 
-### 1. Объявите в файле outputs.tf один output , содержащий: instance_name, external_ip, fqdn для каждой из ВМ в удобном лично для вас формате.(без хардкода!!!)
-### 2. Примените изменения.
+### 1. Объявили в файле outputs.tf один output, содержащий: instance_name, external_ip, fqdn для каждой из ВМ.
+```
+output "vm_instances_info" {
+  description = "Instance name, external IP and FQDN for each VM"
+  value = {
+    web = {
+      instance_name = yandex_compute_instance.platform.name
+      external_ip   = yandex_compute_instance.platform.network_interface.0.nat_ip_address
+      fqdn          = yandex_compute_instance.platform.fqdn
+    }
+    db = {
+      instance_name = yandex_compute_instance.platform_db.name
+      external_ip   = yandex_compute_instance.platform_db.network_interface.0.nat_ip_address
+      fqdn          = yandex_compute_instance.platform_db.fqdn
+    }
+  }
+}
+```
+### 2. Применили изменения.
 ### Вывод значений ip-адресов команды terraform output:
 ![task-4](./screenshots/image-5.png)
 
@@ -106,6 +124,185 @@ resource "yandex_compute_instance" "platform" {
 
 # Задание 5
 
-### 1. В файле locals.tf опишите в одном local-блоке имя каждой ВМ, используйте интерполяцию ${..} с НЕСКОЛЬКИМИ переменными по примеру из лекции.
-### 2. Замените переменные внутри ресурса ВМ на созданные вами local-переменные.
-### 3. Примените изменения.
+### 1-2. В файле locals.tf описали в одном local-блоке имя каждой ВМ. 
+### Заменили переменные внутри ресурса ВМ на созданные local-переменные.
+```
+locals {
+  vm_web_instance_name = "netology-${var.vpc_name}-${var.vm_web_instance_sufix}"
+  vm_db_instance_name  = "netology-${var.vpc_name}-${var.vm_db_instance_sufix}"
+}
+```
+### 3. Применили изменения. Намеренно добавили изменения в имя и увидили, что state изменился.
+![task-5](./screenshots/image-7.png)
+
+
+---------------------------
+
+
+# Задание 6
+### 1. Добавили map-переменную `vms_resources` в `variables.tf`:
+```
+variable "vms_resources" {
+  type = map(
+    object({
+      cores         = number
+      memory_gb     = number
+      core_fraction = number
+    })
+  )
+  description = "Map of VM resource configurations for each instance"
+}
+```
+
+### Определили значение переменной vms_resources в terraform.tfvars:
+```
+vms_resources = {
+  web = {
+    cores         = 2
+    memory_gb     = 1
+    core_fraction = 5
+  }
+  db = {
+    cores         = 2
+    memory_gb     = 2
+    core_fraction = 20
+  }
+}
+```
+
+### 2. Добавили map(object) переменную для блока metadata, общая для всех ВМ.
+```
+variable "metadata" {
+  type        = map(string)
+  description = "Metadata key/value pairs to make available from within the instance."
+}
+```
+
+или
+
+```
+variable "metadata" {
+  type = map(
+    object({
+      serial-port-enable = number
+      ssh-keys = string
+    })
+  )
+  description = "Metadata key/value pairs to make available from within the instance."
+}
+```
+
+### Определили значение переменной vms_resources в terraform.tfvars:
+```
+metadata = {
+  serial-port-enable = "1"
+  ssh-keys           = "ubuntu:ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIELR69LvbgRZaTyYcvL3f70oCf+l86UPTRG27wG6Vau0 laura-grechenko@Awesome-7560"
+}
+```
+
+### Удалили более не используемые переменные проекта.
+
+### 3. Проверили terraform plan. Изменений нет.
+
+![task-6](./screenshots/image-8.png)
+
+
+----------------------------
+
+
+# Задание 7
+### 1. Отобразили второй элемент списка test_list
+### 2. Нашли длину списка test_list
+### 3. Отобразили значение ключа admin из map test_map
+### 4. Написали требуемое interpolation-выражение
+
+![task-7](./screenshots/image-9.png)
+
+
+----------------------------
+
+
+# Задание 8
+### 1. Описали переменную test:
+```
+variable "test" {
+  type        = list(map(list(string)))
+  description = "Test variable from the task 8"
+}
+```
+
+### Сохранили значение в terraform.tfvars:
+```
+test = [
+  {
+    "dev1" = [
+      "ssh -o 'StrictHostKeyChecking=no' ubuntu@62.84.124.117",
+      "10.0.1.7",
+    ]
+  },
+  {
+    "dev2" = [
+      "ssh -o 'StrictHostKeyChecking=no' ubuntu@84.252.140.88",
+      "10.0.2.29",
+    ]
+  },
+  {
+    "prod1" = [
+      "ssh -o 'StrictHostKeyChecking=no' ubuntu@51.250.2.101",
+      "10.0.1.30",
+    ]
+  },
+]
+```
+
+### 2. Вычленили строку "ssh -o StrictHostKeyChecking=no ubuntu@62.84.124.117" из `test` переменной:
+![task-8](./screenshots/image-10.png)
+
+
+----------------------------
+
+
+# Задание 9
+### Используя [инструкцию](https://cloud.yandex.ru/ru/docs/vpc/operations/create-nat-gateway#tf_1), настроили для ВМ nat_gateway.
+### Добавили 2 новых ресурсов `yandex_vpc_gateway`, `yandex_vpc_route_table`:
+```
+resource "yandex_vpc_gateway" "nat_gateway" {
+  folder_id = var.folder_id
+  name      = var.vpc_gateway_name
+  shared_egress_gateway {}
+}
+
+resource "yandex_vpc_route_table" "rt" {
+  folder_id  = var.folder_id
+  name       = var.vpc_route_table_name
+  network_id = yandex_vpc_network.develop.id
+
+  static_route {
+    destination_prefix = var.vpc_route_table_destination_prefix
+    gateway_id         = yandex_vpc_gateway.nat_gateway.id
+  }
+}
+```
+### Добавили аргумент `route_table_id` в ресурсы `yandex_vpc_subnet.develop` `yandex_vpc_subnet.db`
+```
+resource "yandex_vpc_subnet" "develop" {
+  ...
+  route_table_id = yandex_vpc_route_table.rt.id
+}
+
+resource "yandex_vpc_subnet" "db" {
+  ...
+  route_table_id = yandex_vpc_route_table.rt.id
+}
+```
+
+### Для проверки убрали внешний IP адрес (nat=false) и применили изменения
+```
+laura-grechenko@Awesome-7560:~/learning/devops/net-course/devops-net-homework/ter-homeworks-02/src$ terraform apply -var 'vm_web_nat_enabled=false' -var 'vm_db_nat_enabled=false'
+```
+
+### Через интерфейс подключились к serial-консоли DB-VM. Проверили доступ к интернету
+![task-9-1](./screenshots/image-11.png)
+
+### Через интерфейс подключились к serial-консоли Web-VM. Проверили доступ к интернету
+![task-9-2](./screenshots/image-12.png)

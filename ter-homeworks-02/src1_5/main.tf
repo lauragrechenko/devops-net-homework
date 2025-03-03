@@ -7,7 +7,6 @@ resource "yandex_vpc_subnet" "develop" {
   zone           = var.default_zone
   network_id     = yandex_vpc_network.develop.id
   v4_cidr_blocks = var.default_cidr
-  route_table_id = yandex_vpc_route_table.rt.id
 }
 
 resource "yandex_vpc_subnet" "db" {
@@ -15,25 +14,8 @@ resource "yandex_vpc_subnet" "db" {
   zone           = var.zone_b
   network_id     = yandex_vpc_network.develop.id
   v4_cidr_blocks = var.db_subnet_cidr
-  route_table_id = yandex_vpc_route_table.rt.id
 }
 
-resource "yandex_vpc_gateway" "nat_gateway" {
-  folder_id = var.folder_id
-  name      = var.vpc_gateway_name
-  shared_egress_gateway {}
-}
-
-resource "yandex_vpc_route_table" "rt" {
-  folder_id  = var.folder_id
-  name       = var.vpc_route_table_name
-  network_id = yandex_vpc_network.develop.id
-
-  static_route {
-    destination_prefix = var.vpc_route_table_destination_prefix
-    gateway_id         = yandex_vpc_gateway.nat_gateway.id
-  }
-}
 
 data "yandex_compute_image" "ubuntu" {
   family = var.vm_image_family
@@ -44,9 +26,9 @@ resource "yandex_compute_instance" "platform" {
   platform_id = var.vm_web_platform_id
 
   resources {
-    cores         = var.vms_resources["web"].cores
-    memory        = var.vms_resources["web"].memory_gb
-    core_fraction = var.vms_resources["web"].core_fraction
+    cores         = var.vm_web_cores
+    memory        = var.vm_web_memory_gb
+    core_fraction = var.vm_web_core_fraction
   }
 
   boot_disk {
@@ -64,7 +46,10 @@ resource "yandex_compute_instance" "platform" {
     nat       = var.vm_web_nat_enabled
   }
 
-  metadata = var.metadata
+  metadata = {
+    serial-port-enable = var.vm_web_serial_port_enabled
+    ssh-keys           = "${var.vms_ssh_user}:${var.vms_ssh_root_key}"
+  }
 }
 
 resource "yandex_compute_instance" "platform_db" {
@@ -73,9 +58,9 @@ resource "yandex_compute_instance" "platform_db" {
   zone        = var.zone_b
 
   resources {
-    cores         = var.vms_resources["db"].cores
-    memory        = var.vms_resources["db"].memory_gb
-    core_fraction = var.vms_resources["db"].core_fraction
+    cores         = var.vm_db_cores
+    memory        = var.vm_db_memory_gb
+    core_fraction = var.vm_db_core_fraction
   }
 
   boot_disk {
@@ -93,5 +78,8 @@ resource "yandex_compute_instance" "platform_db" {
     nat       = var.vm_db_nat_enabled
   }
 
-  metadata = var.metadata
+  metadata = {
+    serial-port-enable = var.vm_db_serial_port_enabled
+    ssh-keys           = "${var.vms_ssh_user}:${var.vms_ssh_root_key}"
+  }
 }

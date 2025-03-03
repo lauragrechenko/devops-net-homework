@@ -1,20 +1,5 @@
 ###cloud vars
 
-variable "vms_resources" {
-  type = map(
-    object({
-      cores         = number
-      memory_gb     = number
-      core_fraction = number
-    })
-  )
-  description = "Map of VM resource configurations for each instance"
-}
-
-variable "metadata" {
-  type        = map(string)
-  description = "Metadata key/value pairs to make available from within the instance."
-}
 
 variable "cloud_id" {
   type        = string
@@ -25,8 +10,6 @@ variable "folder_id" {
   type        = string
   description = "https://cloud.yandex.ru/docs/resource-manager/operations/folder/get-id"
 }
-
-### VPC Network
 
 variable "default_zone" {
   type        = string
@@ -58,35 +41,23 @@ variable "vpc_name" {
   description = "VPC network & subnet name"
 }
 
-### VPC Gateway
-
-variable "vpc_gateway_name" {
-  type        = string
-  default     = "nat-gateway"
-  description = "Name of the VPC Gateway"
-}
-
-variable "vpc_route_table_name" {
-  type        = string
-  default     = "test-route-table"
-  description = "Name of the route table."
-}
-
-variable "vpc_route_table_destination_prefix" {
-  type        = string
-  default     = "0.0.0.0/0"
-  description = "Route prefix in CIDR notation."
-}
-
 variable "vm_image_family" {
   type        = string
   default     = "ubuntu-2004-lts"
   description = "OS image family for VM instances"
 }
 
-### Task 8
 
-variable "test" {
-  type        = list(map(list(string)))
-  description = "Test variable from the task 8"
+###ssh vars
+
+variable "vms_ssh_root_key" {
+  type        = string
+  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIELR69LvbgRZaTyYcvL3f70oCf+l86UPTRG27wG6Vau0 laura-grechenko@Awesome-7560"
+  description = "ssh-keygen -t ed25519"
+}
+
+variable "vms_ssh_user" {
+  type        = string
+  default     = "ubuntu"
+  description = "Username for SSH access."
 }
