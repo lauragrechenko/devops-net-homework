@@ -93,6 +93,7 @@ resource "yandex_compute_instance" "platform" {
 
 
 [Ссылка на vms_plartform.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src1_5/vms_plartform.tf)
+
 ----------------------------
 
 
@@ -157,6 +158,7 @@ variable "vms_resources" {
   description = "Map of VM resource configurations for each instance"
 }
 ```
+
 [Ссылка на vms_resources в variables.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src_6/variables.tf#L3)
 
 ### Определили значение переменной vms_resources в terraform.tfvars:
