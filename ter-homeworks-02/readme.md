@@ -92,6 +92,7 @@ resource "yandex_compute_instance" "platform" {
 ![task-3](./screenshots/image-6.png)
 
 
+[Ссылка на vms_plartform.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src1_5/vms_plartform.tf)
 ----------------------------
 
 
@@ -135,6 +136,9 @@ locals {
 ### 3. Применили изменения. Намеренно добавили изменения в имя и увидили, что state изменился.
 ![task-5](./screenshots/image-7.png)
 
+[Ссылка на vms_plartform.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src1_5/vms_plartform.tf)
+
+[Ссылка на locals.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src1_5/locals.tf)
 
 ---------------------------
 
@@ -153,6 +157,7 @@ variable "vms_resources" {
   description = "Map of VM resource configurations for each instance"
 }
 ```
+[Ссылка на vms_resources в variables.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src_6/variables.tf#L3)
 
 ### Определили значение переменной vms_resources в terraform.tfvars:
 ```
@@ -169,6 +174,7 @@ vms_resources = {
   }
 }
 ```
+[Ссылка на vms_resources в terraform.tfvars](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src_6/terraform.tfvars#L4)
 
 ### 2. Добавили map(object) переменную для блока metadata, общая для всех ВМ.
 ```
@@ -191,6 +197,7 @@ variable "metadata" {
   description = "Metadata key/value pairs to make available from within the instance."
 }
 ```
+[Ссылка на metadata в variables.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src_6/variables.tf#L14)
 
 ### Определили значение переменной vms_resources в terraform.tfvars:
 ```
@@ -199,6 +206,8 @@ metadata = {
   ssh-keys           = "ubuntu:ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIELR69LvbgRZaTyYcvL3f70oCf+l86UPTRG27wG6Vau0 laura-grechenko@Awesome-7560"
 }
 ```
+
+[Ссылка на metadata в terraform.tfvars](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src_6/terraform.tfvars#L17)
 
 ### Удалили более не используемые переменные проекта.
 
@@ -283,6 +292,8 @@ resource "yandex_vpc_route_table" "rt" {
   }
 }
 ```
+[Ссылка на yandex_vpc_gateway в main.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src/main.tf#L21)
+
 ### Добавили аргумент `route_table_id` в ресурсы `yandex_vpc_subnet.develop` `yandex_vpc_subnet.db`
 ```
 resource "yandex_vpc_subnet" "develop" {
@@ -296,9 +307,12 @@ resource "yandex_vpc_subnet" "db" {
 }
 ```
 
+[Ссылка на yandex_vpc_subnet в main.tf](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-homeworks-02/src/main.tf#L10)
+
 ### Для проверки убрали внешний IP адрес (nat=false) и применили изменения
 ```
-laura-grechenko@Awesome-7560:~/learning/devops/net-course/devops-net-homework/ter-homeworks-02/src$ terraform apply -var 'vm_web_nat_enabled=false' -var 'vm_db_nat_enabled=false'
+laura-grechenko@Awesome-7560:~/learning/devops/net-course/devops-net-homework/ter-homeworks-02/src$ 
+terraform apply -var 'vm_web_nat_enabled=false' -var 'vm_db_nat_enabled=false'
 ```
 
 ### Через интерфейс подключились к serial-консоли DB-VM. Проверили доступ к интернету
