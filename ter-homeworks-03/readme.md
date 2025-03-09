@@ -63,3 +63,44 @@ terraform apply -var 'vm_web_nat_enabled=false' -var 'vm_storage_nat_enabled=fal
 ![task-6](./screenshots/image-6.png)
 
 ### [Ссылка на ветку terraform-03-tasks-5-6](https://github.com/lauragrechenko/devops-net-homework/pull/2/files)
+
+
+---------------------
+# Задание 7
+### Выражение, которое удалит из заданной переменной 3 элемент из: subnet_ids и subnet_zones.
+```
+{
+  network_id  = local.vpc.network_id,
+  subnet_ids  = concat(slice(local.vpc.subnet_ids, 0, 2), slice(local.vpc.subnet_ids, 3, length(local.vpc.subnet_ids))),
+  subnet_zones = concat(slice(local.vpc.subnet_zones, 0, 2), slice(local.vpc.subnet_zones, 3, length(local.vpc.subnet_zones)))
+}
+```
+
+
+---------------------
+# Задание 8
+### Идентифицировали и устранили опечатки в tpl-шаблоне. 
+```
+[webservers]
+%{~ for i in web_servers ~}
+${i["name"]} ansible_host=${i["network_interface"][0]["nat_ip_address"]} platform_id=${i["platform_id"]}
+%{~ endfor ~}
+```
+
+### Terraform логирует на какой строке и в какой позиции ошибка.
+![task-8](./screenshots/image-7.png)
+
+---------------------
+
+# Задание 9
+### Напишите terraform выражения, которые сформируют списки:
+
+#### ["rc01","rc02","rc03","rc04",rc05","rc06",rc07","rc08","rc09","rc10....."rc99"] те список от "rc01" до "rc99"
+```
+[for i in range(1, 100) : format("rc%02d", i)]
+```
+
+#### ["rc01","rc02","rc03","rc04",rc05","rc06","rc11","rc12","rc13","rc14",rc15","rc16","rc19"....."rc96"] те список от "rc01" до "rc96", пропуская все номера, заканчивающиеся на "0","7", "8", "9", за исключением "rc19"
+```
+[for i in range(1,97) : format("rc%02d", i) if ((i % 10 != 0 && i % 10 != 7 && i % 10 != 8 && i % 10 != 9) || i == 19)]
+```
