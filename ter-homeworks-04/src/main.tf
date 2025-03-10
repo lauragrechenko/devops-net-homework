@@ -1,22 +1,18 @@
-resource "yandex_vpc_network" "develop" {
-  name = var.vpc_name
+module "test_vpc" {
+  source      = "./modules/vpc"
+  vpc_name    = var.vpc_name
+  subnet_cidr = var.default_cidr
+  subnet_zone = var.default_zone
 }
 
-resource "yandex_vpc_subnet" "develop" {
-  name           = var.vpc_name
-  zone           = var.default_zone
-  network_id     = yandex_vpc_network.develop.id
-  v4_cidr_blocks = var.default_cidr
-}
-
-module "test-vm" {
+module "test_vm" {
   source   = "git::https://github.com/udjin10/yandex_compute_instance.git?ref=main"
   for_each = { for vm in var.vm_configs : vm.vm_name => vm }
 
   env_name       = var.env_name
-  network_id     = yandex_vpc_network.develop.id
+  network_id     = module.test_vpc.network_id
   subnet_zones   = [var.default_zone]
-  subnet_ids     = [yandex_vpc_subnet.develop.id]
+  subnet_ids     = [module.test_vpc.subnet_id]
   instance_name  = each.value.vm_name
   instance_count = each.value.count
   image_family   = var.vm_image_family
