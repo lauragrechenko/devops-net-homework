@@ -1,8 +1,8 @@
 module "test_vpc" {
   source      = "./modules/vpc"
+  env_name    = var.env_name
   vpc_name    = var.vpc_name
-  subnet_cidr = var.default_cidr
-  subnet_zone = var.default_zone
+  subnets = [{ zone = var.default_zone, cidr = var.default_cidr}]
 }
 
 module "test_vm" {
@@ -12,7 +12,7 @@ module "test_vm" {
   env_name       = var.env_name
   network_id     = module.test_vpc.network_id
   subnet_zones   = [var.default_zone]
-  subnet_ids     = [module.test_vpc.subnet_id]
+  subnet_ids     = module.test_vpc.subnet_ids
   instance_name  = each.value.vm_name
   instance_count = each.value.count
   image_family   = var.vm_image_family

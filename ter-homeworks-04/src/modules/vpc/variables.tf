@@ -3,12 +3,16 @@ variable "vpc_name" {
   description = "The name of the VPC network."
 }
 
-variable "subnet_cidr" {
-  type        = list(string)
-  description = "A block of internal IPv4 addresses that are owned by this subnet."
+variable "subnets" {
+  type = list(object({
+    zone = string
+    cidr = list(string)
+  }))
+  description = "List of subnets to create with zone, cidr."
 }
 
-variable "subnet_zone" {
+variable "env_name" {
   type        = string
-  description = "Name of the Yandex Cloud zone for this subnet."
+  default     = null
+  description = "The environment name."
 }
