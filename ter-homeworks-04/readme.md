@@ -384,8 +384,16 @@ Plan: 1 to add, 1 to change, 0 to destroy.
 ![task-5-3](./screenshots/image-20.png)
 
 
-[Ссылка на коммит с изменениями]()
+[Ссылка на коммит с изменениями](https://github.com/lauragrechenko/devops-net-homework/pull/5/commits/08a32c2405ad969fdea7ec64568c149f013f5671)
 
 
 ---------------------
 
+
+# Задание 6
+
+### Используя модуль и пример из задания создали s3 бакет размером 1 ГБ.
+
+![task-6-1](./screenshots/image-21.png)
+
+[Ссылка на коммит с изменениями]()
