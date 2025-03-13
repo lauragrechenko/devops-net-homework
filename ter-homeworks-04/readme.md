@@ -396,4 +396,26 @@ Plan: 1 to add, 1 to change, 0 to destroy.
 
 ![task-6-1](./screenshots/image-21.png)
 
+[Ссылка на коммит с изменениями](https://github.com/lauragrechenko/devops-net-homework/pull/5/commits/5da587959acffa66b9721809f1595dae09a6f442)
+
+
+---------------------
+
+
+# Задание 7
+### Развернили локально vault, используя docker-compose.yml в проекте.
+### Создалт новый секрет {key = test, value "congrats!"} по пути http://127.0.0.1:8200/ui/vault/secrets/secret/create 
+
+### Считали этот секрет с помощью terraform и выведите его в output:
+![task-7-1](./screenshots/image-22.png)
+
+### Обратились к данным по ключу:
+![task-7-2](./screenshots/image-23.png)
+
+### Замонтировали новый путь и записали новый секрет в vault с помощью terraform.
+
+![task-7-4](./screenshots/image-25.png)
+![task-7-5](./screenshots/image-26.png)
+![task-7-3](./screenshots/image-24.png)
+
 [Ссылка на коммит с изменениями]()
