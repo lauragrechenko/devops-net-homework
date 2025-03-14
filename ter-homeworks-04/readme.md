@@ -418,4 +418,129 @@ Plan: 1 to add, 1 to change, 0 to destroy.
 ![task-7-5](./screenshots/image-26.png)
 ![task-7-3](./screenshots/image-24.png)
 
-[Ссылка на коммит с изменениями]()
+[Ссылка на коммит с изменениями](https://github.com/lauragrechenko/devops-net-homework/pull/5/commits/bc8bfd3a045f726fd86eca656a7ed51945f2a281)
+
+
+---------------------
+
+
+# Задание 8
+## *IAM*. 
+### Создали сервисный аккаунт, используя ресурс `yandex_iam_service_account` 
+### Назначили роли сервисному аккаунт, используя ресурс `yandex_resourcemanager_folder_iam_member`
+### Создали статический ключ доступа, используя ресурс `yandex_iam_service_account_static_access_key`
+
+#### План выполнения
+![task-8-1](./screenshots/image-27.png)
+
+#### Результат выполнения
+![task-8-2](./screenshots/image-28.png)
+
+## *VPC*
+### Используя ранее созданный модуль vpc, настроили backend "s3" для хранения стейта удаленно.
+```
+terraform {
+  backend "s3" {
+    endpoints = {
+      s3 = "https://storage.yandexcloud.net"
+    }
+    bucket = "default-bucket-name-eq44o4e3"
+    region = "ru-central1"
+    key    = "vpc/terraform.tfstate"
+
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    skip_requesting_account_id  = true # This option is required for Terraform 1.6.1 or higher.
+    skip_s3_checksum            = true # This option is required to describe backend for Terraform version 1.6.3 or higher.
+  }
+}
+```
+
+#### Проинициализировали проект и передали ключи созданные на первом шаге задания (IAM).
+![task-8-1](./screenshots/image-29.png)
+
+#### План выполнения
+![task-8-2](./screenshots/image-30.png)
+
+![task-8-1](./screenshots/image-31.png)
+
+#### Результат выполнения
+![task-8-2](./screenshots/image-32.png)
+
+#### Для проверки получили remote-state из s3.
+![task-8-2](./screenshots/image-37.png)
+
+## *VM* 
+### Используя ранее созданный модуль vpc, настроили backend "s3" для хранения стейта удаленно.
+```
+terraform {
+  backend "s3" {
+    endpoints = {
+      s3 = "https://storage.yandexcloud.net"
+    }
+    bucket = "default-bucket-name-eq44o4e3"
+    region = "ru-central1"
+    key    = "vm/terraform.tfstate"
+
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    skip_requesting_account_id  = true # This option is required for Terraform 1.6.1 or higher.
+    skip_s3_checksum            = true # This option is required to describe backend for Terraform version 1.6.3 or higher.
+  }
+}
+```
+
+### VM. Используя data terraform_remote_state, получили vpc данные с backend "s3".
+```
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+  config = {
+    endpoints = {
+      s3 = var.s3_endpoint
+    }
+    bucket                      = var.s3_bucket
+    key                         = var.s3_key
+    region                      = var.s3_region
+    skip_region_validation      = var.skip_region_validation
+    skip_credentials_validation = var.skip_credentials_validation
+    skip_requesting_account_id  = var.skip_requesting_account_id
+    skip_s3_checksum            = var.skip_s3_checksum
+    access_key                  = var.access_key
+    secret_key                  = var.secret_key
+  }
+}
+```
+
+### Использовали VPC данные при создании ВМ
+```
+module "test_vm" {
+  source   = "git::https://github.com/udjin10/yandex_compute_instance.git?ref=main"
+
+  network_id     = data.terraform_remote_state.vpc.outputs.network_id
+  subnet_zones   = [var.default_zone]
+  subnet_ids     = data.terraform_remote_state.vpc.outputs.subnet_ids
+  ...
+}
+```
+
+#### Проинициализировали проект и передали ключи созданные на первом шаге задания (IAM).
+![task-8-2](./screenshots/image-33.png)
+
+#### План выполнения
+![task-8-1](./screenshots/image-34.png)
+
+![task-8-2](./screenshots/image-35.png)
+
+#### Результат выполнения
+![task-8-2](./screenshots/image-36.png)
+
+#### Для проверки получили remote-state из s3.
+![task-8-2](./screenshots/image-38.png)
+
+
+
+
+
+
+
+##### The end! :)
