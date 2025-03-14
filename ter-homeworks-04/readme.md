@@ -537,7 +537,7 @@ module "test_vm" {
 #### Для проверки получили remote-state из s3.
 ![task-8-2](./screenshots/image-38.png)
 
-
+[Ссылка на коммит с изменениями](https://github.com/lauragrechenko/devops-net-homework/pull/5/commits/044b3f30a127699b6158f564276bbf88ff3c7d33)
 
 
 
