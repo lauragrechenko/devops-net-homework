@@ -39,15 +39,9 @@ variable "aws_shared_credentials_file" {
 }
 
 # DynamoDB Vars
-variable "ydb_full_endpoint" {
-  type        = string
-  default     = "grpcs://ydb.serverless.yandexcloud.net:2135/?database=/ru-central1/b1g3n95qr8v0au8r4uks/etnvt72m9cpdam7eddl9"
-  description = "Bla"
-}
-
 variable "ydb_database_path" {
   type        = string
-  description = "Bla"
+  description = "Path to YDB database."
 }
 
 # DynamoDB Table Vars
@@ -79,4 +73,34 @@ variable "dynamodb_table_attribute_type" {
   type        = string
   default     = "S"
   description = "Data type of the attribute (e.g., S for String)."
+}
+
+variable "dynamodb_key_name" {
+  type        = string
+  default     = "dynamodb-key"
+  description = "Name for the KMS key used to encrypt the DynamoDB-compatible document table."
+}
+
+variable "dynamodb_key_description" {
+  type        = string
+  default     = "KMS key for encrypting the DynamoDB-compatible document table"
+  description = "Description for the KMS key used for encrypting the DynamoDB-compatible document table."
+}
+
+variable "dynamodb_key_rotation_period" {
+  type        = string
+  default     = "8760h" // 1 year in hours
+  description = "Rotation period for the KMS key. '8760h' equals one year."
+}
+
+variable "dynamodb_table_sse_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable server-side encryption for the DynamoDB table."
+}
+
+variable "dynamodb_table_pitr_enabled" {
+  type        = bool
+  default     = true
+  description = "Enable point-in-time recovery for the DynamoDB table."
 }
