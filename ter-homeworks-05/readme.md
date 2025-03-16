@@ -175,7 +175,7 @@ variable "in_the_end_there_can_be_only_one" {
 
 # Задание 6
 ## Настроили Gitlab CI/CD-систему. (Ранее не изучала - поэтому это больше проба :))
-### 1. Создали докер образ (yc, terraform, tflint, checkov) и загрузили образ в DockerHub.
+### Создали докер образ (yc, terraform, tflint, checkov) и загрузили образ в DockerHub.
 ### Для тестирования использовала модуль VPC.
 
 ### Созданный Pipeline
@@ -194,6 +194,10 @@ variable "in_the_end_there_can_be_only_one" {
 
 ### Результаты Pipeline - destroy (manual)
 ![task-6-2](./screenshots/6-4.png)
+
+
+### [Ссылка на коммит с изменениями](https://github.com/lauragrechenko/devops-net-homework/pull/6/commits/1abc73759d25baafd43a9d07d02a3d8e31d41374)
+
 
 ---------------------
 
