@@ -31,7 +31,7 @@ resource "yandex_iam_service_account" "sa" {
 resource "yandex_resourcemanager_folder_iam_member" "storage-account-iam" {
   folder_id = var.folder_id
   role      = var.storage_iam_member_role
-  member    = "var.iam_member_prefix:${yandex_iam_service_account.sa.id}"
+  member    = "${var.iam_member_prefix}:${yandex_iam_service_account.sa.id}"
 }
 
 resource "yandex_iam_service_account_static_access_key" "sa-static-key" {

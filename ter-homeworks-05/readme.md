@@ -121,6 +121,8 @@ Check: CKV_TF_2: "Ensure Terraform module sources use a tag with a version numbe
 ![task-3-8](./screenshots/3-8.png)
 ![task-3-9](./screenshots/3-9.png)
 
+## [!!!UPDATE] Исправления выше при попытке их применить в Задание 6 (уже после того как я закончила задание 3) не взлетели - я не стала дальше "копать". Поэтому исправления выше невалидны.
+
 ### [Ссылка на коммит с изменениями](https://github.com/lauragrechenko/devops-net-homework/pull/6/commits/27cc9e3034c14b1782ef7494f53d0d0d83ff956d)
 
 
@@ -172,7 +174,30 @@ variable "in_the_end_there_can_be_only_one" {
 
 
 # Задание 6
-### !Вернусь к этому заданию после изучения Jenkins/Teamcity/Gitlab.
+## Настроили Gitlab CI/CD-систему. (Ранее не изучала - поэтому это больше проба :))
+### 1. Создали докер образ (yc, terraform, tflint, checkov) и загрузили образ в DockerHub.
+### Для тестирования использовала модуль VPC.
+
+### Созданный Pipeline
+![task-6-1](./screenshots/6-1.png)
+
+### Результаты Pipeline - lint_plan
+![task-6-2](./screenshots/6-2.png)
+
+### Результаты Pipeline - apply (manual)
+![task-6-2](./screenshots/6-3.png)
+
+### Были создан ресурс сеть с подсетью, state сохранен в S3 bucket
+![task-6-2](./screenshots/6-5.png)
+![task-6-2](./screenshots/6-6.png)
+![task-6-2](./screenshots/6-7.png)
+
+### Результаты Pipeline - destroy (manual)
+![task-6-2](./screenshots/6-4.png)
+
+---------------------
+
+
 
 # Задание 7
 ### Создали отдельный terraform root модуль, который создает YDB, s3 bucket для tfstate и сервисный аккаунт с необходимыми правами.
