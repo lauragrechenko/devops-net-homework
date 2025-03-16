@@ -1,0 +1,26 @@
+workflow:
+rules:
+- if: $CI_PIPELINE_SOURCE == "merge_request_event"
+when: always
+stages:
+- lint_plan
+- apply
+before_script:
+- yc config set service-account-key "${CI_CLOUD_ROBOT}"
+- export cloud_access_token=$(yc iam create-token)
+- terraform init -backend-config="secret_key=${CI_S3_SECRET_KEY_NETOTFSTATE}"
+lint_plan:
+script:
+- tflint>tflint; checkov>checkov
+- terraform plan -var="cloud_access_token=${cloud_access_token}" -out=outfile
+allow_failure:
+exit_codes: [ 2, 3 ]
+artifacts:
+when: always
+paths: [ "outfile", "tflint", "checkov"]
+apply:
+stage: apply
+script:
+- terraform apply "outfile"
+when: manual
+dependencies: [ "lint_plan" ]
