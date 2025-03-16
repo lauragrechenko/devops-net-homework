@@ -1,6 +1,3 @@
-### Настройте отдельный terraform root модуль, 
-# который будет создавать YDB, s3 bucket для tfstate и сервисный аккаунт с необходимыми правами.
-
 ### S3 BUCKET
 
 resource "random_string" "unique_id" {
