@@ -1,0 +1,56 @@
+image: lauragrechenko/ci-tools:latest
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: always
+
+stages:
+  - lint_plan
+  - apply
+  - destroy
+
+variables:
+  TF_VAR_subnets: '[ { "zone": "ru-central1-a", "cidr": ["10.0.1.0/24"] } ]'
+  TF_VAR_vpc_name: "s3-test-vpc"
+  TF_VAR_cloud_id: "b1g4vhp2shscb9od4rnn"
+  TF_VAR_folder_id: "b1g4vhp2shscb9od4rnn" 
+
+  TF_IN_AUTOMATION: 1
+
+before_script:
+  - echo "$CI_CLOUD_ROBOT_B64" | base64 -d > sa-key.json
+  - yc config set service-account-key "sa-key.json"
+  - export cloud_access_token=$(yc iam create-token)
+  - terraform init -backend-config="secret_key=${CI_S3_SECRET_KEY_NETOTFSTATE}" -backend-config="access_key=${CI_S3_ACCESS_KEY_NETOTFSTATE}"
+
+lint_plan:
+  stage: lint_plan
+  script:
+    - tflint > tflint.log || true
+    - checkov --directory . > checkov.log || true
+    - terraform plan -var="token=${cloud_access_token}" -out=plan.out
+  allow_failure:
+    exit_codes:
+      - 2
+      - 3
+  artifacts:
+    when: always
+    paths:
+      - tflint.log
+      - checkov.log
+      - plan.out
+
+apply:
+  stage: apply
+  script:
+    - terraform apply plan.out
+  when: manual
+  dependencies:
+    - lint_plan
+
+destroy:
+  stage: destroy
+  when: manual
+  script:
+    - terraform destroy -auto-approve -var="token=${cloud_access_token}"
