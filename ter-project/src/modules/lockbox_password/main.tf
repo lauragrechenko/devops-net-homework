@@ -13,18 +13,19 @@ resource "random_password" "this" {
 }
 
 resource "yandex_lockbox_secret" "this" {
-  name                = var.secret_name
-  description         = var.secret_description
+  name        = var.secret_name
+  description = var.secret_description
 }
 
 resource "yandex_lockbox_secret_iam_member" "this" {
+  for_each  = toset(var.iam_roles)
   secret_id = yandex_lockbox_secret.this.id
-  role      = var.iam_role
-  member = var.iam_member
+  role      = each.value
+  member    = "${var.iam_member_prefix}:${var.service_account_id}"
 }
 
 resource "yandex_lockbox_secret_version" "this" {
-  secret_id             = yandex_lockbox_secret.this.id
+  secret_id = yandex_lockbox_secret.this.id
   entries {
     key        = var.entry_key
     text_value = random_password.this.result

@@ -26,7 +26,7 @@ variable "default_zone" {
 
 ### vpc vars
 
-variable "subnets" {
+variable "vpc_subnets" {
   type = list(object({
     zone = string
     cidr = list(string)
@@ -45,7 +45,7 @@ variable "vpc_env" {
   description = "The environment name."
 }
 
-variable "vpc_security_group_name" {
+variable "security_group_name" {
   type        = string
   description = "Name of the security group."
 }
@@ -95,30 +95,105 @@ variable "mysql_db_user_name" {
 
 
 
+# Repo registry vars
+
+variable "registry_service_account_id" {
+  type        = string
+  description = "The service account ID that will be granted access to the registry."
+}
+
+
 
 # Lockbox vars
 
-variable "lockbox_secret_name" {
+variable "lockbox_db_secret_name" {
   type        = string
   description = "The name of the Lockbox secret used to store the DB user's password."
 }
 
-variable "lockbox_secret_description" {
+variable "lockbox_db_secret_description" {
   type        = string
   description = "A description for the Lockbox secret."
 }
 
-variable "lockbox_iam_member" {
-  type        = string
-  description = "The full identifier of the account to be granted access to the secret."
-}
-
-variable "lockbox_iam_role" {
-  type        = string
-  description = "The IAM role to assign for accessing the secret."
-}
-
-variable "lockbox_entry_key" {
+variable "lockbox_db_entry_key" {
   type        = string
   description = "The key of the entry."
+}
+
+variable "lockbox_db_service_account_id" {
+  type        = string
+  description = "The service account ID that will be granted access to the secret."
+}
+
+
+
+# VM vars
+
+variable "vms_ssh_user" {
+  type        = string
+  default     = "ubuntu"
+  description = "Username for SSH access."
+}
+
+variable "vm_web_cloudinit_packages" {
+  type        = list(string)
+  description = "List of packages to install via cloud-init."
+  default     = ["docker.io", "docker-compose-plugin", "unattended-upgrades"]
+}
+
+variable "vm_web_serial_port_enabled" {
+  type        = string
+  default     = "0"
+  description = "Enables serial port access for debugging and recovery (1 = enabled, 0 = disabled)."
+}
+
+variable "service_account_id" {
+  type        = string
+  description = ""
+}
+
+
+
+# DNS vars
+variable "dns_zone_name" {
+  type        = string
+  description = "The name of the DNS zone to be created."
+  default     = "my-private-zone"
+}
+
+variable "dns_zone_description" {
+  type        = string
+  description = "A description for the DNS zone."
+  default     = "The project DNS setup"
+}
+
+variable "domain_zone" {
+  type        = string
+  description = "The DNS zone (FQDN) for the domain. Must end with a dot."
+  default     = "awesome-devops-project-by-laura.com."
+}
+
+variable "dns_zone_public" {
+  type        = bool
+  description = "Indicates whether the DNS zone is public or private."
+  default     = true
+}
+
+variable "dns_record_name" {
+  type        = string
+  description = "The name of the DNS recordset to be created (FQDN)."
+  default     = "srv.awesome-devops-project-by-laura.com."
+}
+
+variable "dns_record_type" {
+  type        = string
+  description = "The type of the DNS record (e.g., 'A', 'CNAME', etc.)."
+  default     = "A"
+}
+
+variable "dns_record_ttl" {
+  type        = number
+  description = "The Time-To-Live (TTL) for the DNS record, in seconds."
+  default     = 200
 }

@@ -10,5 +10,3 @@
 
 # own secret vars store.
 secrets.tfvars
-
-dev.tfvars

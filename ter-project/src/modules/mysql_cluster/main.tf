@@ -14,7 +14,7 @@ locals {
 resource "yandex_mdb_mysql_cluster" "this" {
   name        = var.cluster_name
   description = "MySQL cluster for ${var.env_name} environment"
-  
+
   environment = var.env_name
   network_id  = var.network_id
   version     = var.cluster_version

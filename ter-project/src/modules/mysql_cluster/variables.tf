@@ -5,7 +5,7 @@ variable "cluster_name" {
 
 variable "env_name" {
   type        = string
-  default     = "ENVIRONMENT_UNSPECIFIED"
+  default     = "PRESTABLE"
   description = "Deployment environment of the MySQL cluster."
 }
 

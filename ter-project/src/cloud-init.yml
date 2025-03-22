@@ -1,0 +1,58 @@
+#cloud-config
+users:
+  - name: ${username}
+    groups: sudo
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh-authorized-keys:
+      - ${ssh_public_key}
+
+package_update: true
+package_upgrade: false
+
+groups:
+  - docker
+
+system_info:
+  default_user:
+    groups: [docker]
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - unattended-upgrades
+  - jq
+
+write_files:
+  - path: /etc/myapp/db.conf
+    content: |
+      DB_HOST=${db_host}
+      DB_USER=${db_user}
+      DB_NAME=${db_name}
+    owner: root:root
+    permissions: '0644'
+
+runcmd:
+  - apt-get update
+  - apt-get install -y ca-certificates curl gnupg
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/debian/gpg | tee /etc/apt/keyrings/docker.asc > /dev/null
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  #- echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io
+  - systemctl enable docker
+  - systemctl start docker
+  - usermod -aG docker ubuntu
+  # Try lockbox
+  - |
+    # Set HOME variable to ensure the install script works correctly
+    export HOME=/root
+    curl -sS https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+    export PATH="/root/yandex-cloud/bin:$${PATH}"
+    DB_PASSWORD=$(yc lockbox payload get --id ${db_password_secret_id} --format json | jq -r '.entries[0].text_value')
+    echo "DB_PASSWORD=$${DB_PASSWORD}" >> /etc/myapp/db.conf

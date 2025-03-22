@@ -23,3 +23,9 @@ variable "authentication_plugin" {
   default     = "SHA256_PASSWORD"
   description = "Authentication plugin."
 }
+
+variable "user_permission" {
+  type        = list(string)
+  default     = ["ALL"]
+  description = "List user's roles in the database."
+}

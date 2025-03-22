@@ -18,4 +18,9 @@ resource "yandex_mdb_mysql_user" "this" {
   name                  = var.user_name
   password              = var.user_password
   authentication_plugin = var.authentication_plugin
+
+  permission {
+    database_name = yandex_mdb_mysql_database.this.name
+    roles         = var.user_permission
+  }
 }

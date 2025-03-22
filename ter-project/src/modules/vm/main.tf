@@ -11,16 +11,16 @@ data "yandex_compute_image" "ubuntu" {
   family = var.vm_image_family
 }
 
-resource "yandex_compute_instance" "web" {
-  count = var.vm_web_count
+resource "yandex_compute_instance" "this" {
+  count = var.vm_count
 
-  name        = "${var.vm_web_name_prefix}-${count.index + 1}"
-  platform_id = var.vm_web_platform_id
+  name        = "${var.vm_name_prefix}-${count.index + 1}"
+  platform_id = var.vm_platform_id
 
   resources {
-    cores         = var.vm_web_cores
-    memory        = var.vm_web_memory_gb
-    core_fraction = var.vm_web_core_fraction
+    cores         = var.vm_cores
+    memory        = var.vm_memory_gb
+    core_fraction = var.vm_core_fraction
   }
 
   boot_disk {
@@ -30,17 +30,25 @@ resource "yandex_compute_instance" "web" {
   }
 
   scheduling_policy {
-    preemptible = var.vm_web_preemptible
+    preemptible = var.vm_preemptible
   }
 
   network_interface {
-    subnet_id = var.vpc_subnet_id
-    nat       = var.vm_web_nat_enabled
+    subnet_id          = var.vpc_subnet_id
+    nat                = var.vm_nat_enabled
     security_group_ids = var.security_group_ids
   }
 
-  metadata = {
-    serial-port-enable = var.vm_web_serial_port_enabled
-    ssh-keys           = "${var.vms_ssh_user}:${var.ssh_pub_key}"
-  }
+  metadata = var.vm_metadata
+
+  service_account_id = var.service_account_id
+}
+
+resource "yandex_container_registry_iam_binding" "puller" {
+  registry_id = var.container_registry_id
+  role        = var.registry_puller_role
+
+  members = [
+    "${var.iam_member_prefix}:${var.service_account_id}"
+  ]
 }

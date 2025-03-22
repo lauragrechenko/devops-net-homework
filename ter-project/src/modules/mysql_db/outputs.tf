@@ -7,3 +7,7 @@ output "user_id" {
   value       = yandex_mdb_mysql_user.this.id
   description = "ID of the created MySQL user."
 }
+
+output "user_name" {
+  value = yandex_mdb_mysql_user.this.name
+}

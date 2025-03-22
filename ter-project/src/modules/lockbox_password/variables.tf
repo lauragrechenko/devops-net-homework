@@ -9,14 +9,21 @@ variable "secret_description" {
   description = "A description for the Lockbox secret."
 }
 
-variable "iam_member" {
+variable "iam_member_prefix" {
   type        = string
-  description = "The full identifier of the account to be granted access to the secret."
+  description = "The IAM member prefix, such as 'serviceAccount' or 'userAccount'."
+  default     = "serviceAccount"
 }
 
-variable "iam_role" {
+variable "service_account_id" {
   type        = string
+  description = "The service account ID that will be granted access to the secret."
+}
+
+variable "iam_roles" {
+  type        = list(string)
   description = "The IAM role to assign for accessing the secret."
+  default     = ["lockbox.editor", "lockbox.payloadViewer"]
 }
 
 variable "entry_key" {
