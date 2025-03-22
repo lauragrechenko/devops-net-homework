@@ -1,19 +1,19 @@
 # 1. Развертывание инфраструктуры в Yandex Cloud.
+### [Ссылка на проект](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project)
+
 ## 1.0 Настройка Backend (S3 Bucket) и Serverless БД для хранения terraform state удаленно.
+### [Ссылка на код backend-setup](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/backend_setup)
+### [Ссылка на код doc-table](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/doc_table)
+
 ### Используя код из предыдущей работы - создали `S3 Bucket` и создали `Managed Service for YDB`.
 ### Результаты выполнения:
 ![alt text](./screenshots/1-1.png)
 
 ![alt text](./screenshots/1-2.png)
 
-### [Ссылка на код backend-setup](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/backend_setup)
-
-
 ### Используя код из предыдущей работы - создали DynamoDB таблицу `state-lock-table` в Managed Service for YDB.
 
 ![alt text](./screenshots/1-3.png)
-
-### [Ссылка на код doc-table](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/doc_table)
 
 ### Настроили Backend в root модуле
 ```
@@ -41,6 +41,7 @@ terraform {
 
 
 ## 1.1-2 Для создания VPC и подсети использовали код модуля VPC из предыдущих работ.
+### [Ссылка на код VPC module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/vpc)
 
 ###  Использовали VPC в root модуле
 ```
@@ -55,13 +56,13 @@ module "project_vpc" {
 ### Результаты выполнения:
 ![alt text](./screenshots/1-4.png)
 
-### [Ссылка на код VPC module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/vpc)
-
 
 
 
 
 ## 1.3 Настроили группы безопасности (порты 22, 80, 443, 8090) использовали код модуля Security из предыдущих работ.
+### [Ссылка на код security module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/security)
+
 ###  Использовали security в root модуле
 ```
 module "project_security_group" {
@@ -81,12 +82,13 @@ module "project_security_group" {
 
 ![alt text](./screenshots/1-6.png)
 
-### [Ссылка на код security module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/security)
 
 
 
 
 ## 1.4 Создание Container Registry модуля.
+### [Ссылка на код container-registry module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/container_registry)
+
 ### Используя ресурсы `yandex_container_registry` и `yandex_container_repository` - создали реестр Docker-образов.
 ### Используя ресурс `yandex_container_repository_iam_binding` - назначили сервисному аккаунту роли на добавление и подтягивание образов из репозитория.
 ### Использовали container-registry module в root модуле
@@ -102,12 +104,13 @@ module "project_registry" {
 
 ![alt text](./screenshots/1-8.png)
 
-### [Ссылка на код container-registry module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/container_registry)
 
 
 
 
 ## 1.5 Добавали новый модуль для создания LockBox и дальнейшей интеграции с Terraform так, чтобы пароль для БД брался из LockBox.
+### [Ссылка на код lockbox-password module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/lockbox_password)
+
 ### Внутри модуля генерируем пароль используя random_password. 
 ### Создаем Lockbox используя ресурс `yandex_lockbox_secret`
 ### Сохраняем данные(random_password) в Lockbox используя ресурс `yandex_lockbox_secret_version`. 
@@ -128,12 +131,12 @@ module "project_db_password_secret" {
 ### Результаты выполнения:
 ![alt text](./screenshots/1-9.png)
 
-### [Ссылка на код lockbox-password module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/lockbox_password)
-
 
 
 
 ## 1.6 Создание БД MySQL в Yandex Cloud.
+### [Ссылка на код mysql-cluster module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/mysql_cluster)
+
 ### 1.6.1 Используя ресурсы `yandex_mdb_mysql_cluster` создали кластер серверов MySQL (с одним хостом).
 ###  Использовали mysql-cluster module в root модуле.
 ```
@@ -153,11 +156,12 @@ module "project_mysql_cluster" {
 ### Результаты выполнения:
 ![alt text](./screenshots/1-10.png)
 
-### [Ссылка на код mysql-cluster module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/mysql_cluster)
 
 
 
 ### 1.6.2 Используя ресурсы `yandex_mdb_mysql_database` и `yandex_mdb_mysql_user` создали Базу данных и пользователя с доступом к ней.
+### [Ссылка на код mysql-db module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/mysql_db)
+
 ### В качестве пароля взяли данные из LockBox (созданные на шаге 1.5)
 ```
 module "project_mysql_db" {
@@ -173,12 +177,12 @@ module "project_mysql_db" {
 ### Результаты выполнения:
 ![alt text](./screenshots/1-11.png)
 
-### [Ссылка на код mysql-db module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/mysql_db)
-
 
 
 
 ### 1.7 Создание VM
+### [Ссылка на код VM module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/vm)
+
 ### Использовали модуль VM из предыдущих работ c привязкой групп безопасности к VM.
 ### Добавили в модуль код для добавления роли сервисному аккаунту на скачивание Docker образов с репозитория (созданного на шаге 1.4).
 ### Использовали vm в root модуле
@@ -202,8 +206,6 @@ module "project_vm" {
 ### Результаты выполнения:
 ![alt text](./screenshots/1-12.png)
 
-### [Ссылка на код VM module](https://github.com/lauragrechenko/devops-net-homework/tree/master/ter-project/src/modules/vm)
-
 
 
 ---------------------
@@ -211,6 +213,8 @@ module "project_vm" {
 
  
 # Задание 2. 
+### [Ссылка на код cloud-init.yml](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-project/src/cloud-init.yml)
+
 ### Конфигурирование ВМ используя user-data (cloud-init)
 ### При вызове модуля vm передали user-data.
 ```
@@ -256,7 +260,6 @@ data "template_file" "cloudinit" {
 ### Проверили что файл /etc/myapp/db.conf был создан с корректными данными и пароль получен из Lockbox.
 ![alt text](./screenshots/2-3.png)
 
-### [Ссылка на код cloud-init.yml](https://github.com/lauragrechenko/devops-net-homework/blob/master/ter-project/src/cloud-init.yml)
 
 
 
@@ -265,7 +268,7 @@ data "template_file" "cloudinit" {
 
  
 # Задание 3. 
-## Использовали python проект с предыдущих ДР.  [Ссылка на код (со всеми изменениями ниже)](https://github.com/lauragrechenko/shvirtd-example-python/tree/main)
+## Использовали python проект с предыдущих ДР.  [Ссылка на код проекта web-python (со всеми изменениями)](https://github.com/lauragrechenko/shvirtd-example-python/tree/main)
 ## 3.1 Обновили Docker файл c web-приложением.
 ### [Ссылка на код Dockerfile](https://github.com/lauragrechenko/shvirtd-example-python/blob/main/Dockerfile)
 
