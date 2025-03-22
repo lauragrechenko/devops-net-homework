@@ -98,7 +98,6 @@ module "project_mysql_db" {
   db_name = var.mysql_db_name
 
   user_name = var.mysql_db_user_name
-  #user_password = data.yandex_lockbox_secret_version.project_db_password.entries[0][var.lockbox_db_entry_key]
   user_password = [for entry in data.yandex_lockbox_secret_version.project_db_password.entries : entry.text_value if entry.key == var.lockbox_db_entry_key][0]
 }
 

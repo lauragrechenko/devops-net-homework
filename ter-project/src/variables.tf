@@ -177,7 +177,7 @@ variable "domain_zone" {
 variable "dns_zone_public" {
   type        = bool
   description = "Indicates whether the DNS zone is public or private."
-  default     = true
+  default     = false
 }
 
 variable "dns_record_name" {
