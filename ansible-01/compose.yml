@@ -1,0 +1,18 @@
+version: '3'
+services:
+  centos7:
+    build:
+      context: ./centos7
+      dockerfile: Dockerfile
+    container_name: centos7
+
+  ubuntu:
+    build:
+      context: ./ubuntu
+      dockerfile: Dockerfile
+    container_name: ubuntu
+
+  fedora:
+    image: pycontribs/fedora
+    container_name: fedora
+    command: ["sleep", "infinity"]

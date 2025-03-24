@@ -1,6 +1,11 @@
 ter-homeworks/
+mnt-homeworks
 vb_id_ed25519
 05-virt-04-docker-in-practice/terraform*
+05-virt-02-iaac/.vagrant/
+05-virt-02-iaac/Vagrantfile
+05-virt-02-iaac/db50d2a7-2dd2-4beb-b2ff-3f1c04e5d11a
+05-virt-02-iaac/packer_1.9.4_darwin_amd64.zip
 authorized_key.json
 
 tmp.txt
