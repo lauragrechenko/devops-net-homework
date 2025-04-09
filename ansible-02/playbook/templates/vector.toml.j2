@@ -1,0 +1,7 @@
+[sources.internal_logs]
+type = "internal_metrics"
+
+[sinks.console]
+inputs = ["internal_logs"]
+type = "console"
+encoding.codec = "json"
