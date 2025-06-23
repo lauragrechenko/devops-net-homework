@@ -7,6 +7,7 @@
 3. Создали доски Kanban и Scrum.
 
 ## Основная часть
+## Создали workflows согласно требованиям
 
 Необходимо создать собственные workflow для двух типов задач: bug и остальные типы задач. Задачи типа bug должны проходить жизненный цикл:
 
@@ -26,7 +27,7 @@
 4. On test -> On develop, Done.
 5. Done -> Closed, Open.
 
-**Что нужно сделать**
+## Выполнили шаги согласно заданию
 
 1. Создайте задачу с типом bug, попытайтесь провести его по всему workflow до Done. 
 1. Создайте задачу с типом epic, к ней привяжите несколько задач с типом task, проведите их по всему workflow до Done. 
@@ -34,4 +35,11 @@
 1. Верните задачи в статус Open.
 1. Перейдите в Scrum, запланируйте новый спринт, состоящий из задач эпика и одного бага, стартуйте спринт, проведите задачи до состояния Closed. Закройте спринт.
 2. Если всё отработалось в рамках ожидания — выгрузите схемы workflow для импорта в XML. Файлы с workflow и скриншоты workflow приложите к решению задания.
+
+## Созданные workflows
+[Ссылка на bug-workflow xml](https://github.com/lauragrechenko/devops-net-homework/blob/master/09-ci-01-intro/bug_workflow.xml)
+[Ссылка на default-workflow xml](https://github.com/lauragrechenko/devops-net-homework/blob/master/09-ci-01-intro/default_workflow.xml)
+
+![alt text](screenshots/bug-workflow.png)
+![alt text](screenshots/default-workflow.png)
 ---
