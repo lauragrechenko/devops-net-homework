@@ -1,0 +1,17 @@
+[Unit]
+Description=Nexus Repository Manager
+After=network.target
+
+[Service]
+Type=forking
+User={{ nexus_user_name }}
+Group={{ nexus_user_group }}
+LimitNOFILE={{ nexus_ulimit }}
+WorkingDirectory={{ nexus_directory_home }}
+# invoke via /bin/sh
+ExecStart=/bin/sh -c '{{ nexus_directory_home }}/bin/nexus start'
+ExecStop=/bin/sh -c '{{ nexus_directory_home }}/bin/nexus stop'
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
