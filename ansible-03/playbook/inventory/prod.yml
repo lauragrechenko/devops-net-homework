@@ -1,0 +1,23 @@
+---
+clickhouse:
+  hosts:
+    clickhouse-01:
+      ansible_host: 158.160.175.198
+      ansible_user: admin
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa_yc
+      ansible_python_interpreter: /usr/libexec/platform-python
+
+vector:
+  hosts:
+    vector-01:
+      ansible_host: 158.160.146.234
+      ansible_user: admin
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa_yc
+
+
+lighthouse:
+  hosts:
+    lighthouse-01:
+      ansible_host: 158.160.193.1
+      ansible_user: admin
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa_yc

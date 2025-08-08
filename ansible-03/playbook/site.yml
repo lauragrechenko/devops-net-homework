@@ -1,0 +1,236 @@
+---
+- name: Setup Clickhouse
+  hosts: clickhouse
+  tags: clickhouse
+  handlers:
+    - name: Restart clickhouse service
+      become: true
+      ansible.builtin.service:
+        name: clickhouse-server
+        state: restarted
+
+  tasks:
+    - name: Download Clickhouse packages with fallback
+      block:
+        - name: Download Clickhouse packages with fallback
+          ansible.builtin.get_url:
+            url: "https://packages.clickhouse.com/rpm/stable/{{ item }}-{{ clickhouse_version }}.noarch.rpm"
+            dest: "./{{ item }}-{{ clickhouse_version }}.rpm"
+            mode: "0644"
+          with_items: "{{ clickhouse_packages }}"
+      rescue:
+        - name: Get clickhouse distrib (fallback)
+          ansible.builtin.get_url:
+            url: "https://packages.clickhouse.com/rpm/stable/clickhouse-common-static-{{ clickhouse_version }}.x86_64.rpm"
+            dest: "./clickhouse-common-static-{{ clickhouse_version }}.rpm"
+            mode: "0644"
+    - name: Install clickhouse packages
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - clickhouse-common-static-{{ clickhouse_version }}.rpm
+          - clickhouse-client-{{ clickhouse_version }}.rpm
+          - clickhouse-server-{{ clickhouse_version }}.rpm
+        disable_gpg_check: true
+      notify: Restart clickhouse service
+    - name: Ensure ClickHouse config has listen_host after http_port
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/clickhouse-server/config.xml
+        regexp: '^\s*<listen_host>0\.0\.0\.0</listen_host>\s*$'
+        insertafter: '^\s*<http_port>8123</http_port>\s*$'
+        line: '  <listen_host>0.0.0.0</listen_host>'
+        state: present
+        backup: true
+      notify: Restart clickhouse service
+
+    - name: Ensure clickhouse service is enabled and started
+      become: true
+      ansible.builtin.service:
+        name: clickhouse-server
+        state: started
+        enabled: true
+
+    - name: Flush handlers (so any restart happens now)
+      ansible.builtin.meta: flush_handlers
+
+    - name: Wait for clickhouse to be ready (TCP native port)
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 9000
+        delay: 0
+        timeout: 60
+
+    - name: Wait for ClickHouse HTTP to be ready
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 8123
+        timeout: 30
+
+    - name: Create database
+      ansible.builtin.command: "clickhouse-client -h 127.0.0.1 -q 'CREATE DATABASE logs;'"
+      register: create_db
+      failed_when: create_db.rc != 0 and create_db.rc != 82
+      changed_when: create_db.rc == 0
+
+    - name: Check if table exists
+      ansible.builtin.command: clickhouse-client -h 127.0.0.1 -q "EXISTS TABLE logs.logs"
+      register: ch_table_exists
+      changed_when: false
+
+    - name: Create logs.logs table
+      ansible.builtin.command: >
+        clickhouse-client -h 127.0.0.1 -q "
+        CREATE TABLE logs.logs (
+          timestamp DateTime,
+          message   String,
+          host      String,
+          source    String
+        ) ENGINE = MergeTree() ORDER BY timestamp"
+      when: ch_table_exists.stdout | trim == '0'
+ 
+- name: Setup Vector
+  hosts: vector
+  become: true
+  tags: vector
+  handlers:
+    - name: Restart vector
+      ansible.builtin.service:
+        name: vector
+        state: restarted
+  tasks:
+    - name: Download Vector archive
+      ansible.builtin.get_url:
+        url: "{{ vector_url }}"
+        dest: "{{ vector_archive_path }}"
+        mode: "0644"
+    - name: Ensure install directory exists
+      ansible.builtin.file:
+        path: "{{ vector_install_dir }}"
+        state: directory
+        mode: "0755"
+    - name: Ensure /var/lib/vector exists
+      ansible.builtin.file:
+        path: /var/lib/vector
+        state: directory
+        mode: '0755'
+    - name: Unarchive Vector
+      ansible.builtin.unarchive:
+        src: "{{ vector_archive_path }}"
+        dest: "{{ vector_install_dir }}"
+        remote_src: true
+    - name: Ensure config dir exists
+      ansible.builtin.file:
+        path: "{{ vector_config_dir }}"
+        state: directory
+        mode: "0755"
+    - name: Deploy config from template
+      ansible.builtin.template:
+        src: "{{ vector_template_local_path }}"
+        dest: "{{ vector_config_dir }}/vector.toml"
+        mode: "0644"
+      notify: Restart vector
+    - name: Create systemd unit for Vector
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/vector.service
+        content: |
+          [Unit]
+          Description=Vector Service
+          After=network.target
+
+          [Service]
+          ExecStart={{ vector_install_dir }}/bin/vector -c {{ vector_config_dir }}/vector.toml
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: "0644"
+      notify: Restart vector
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+    - name: Enable vector service
+      ansible.builtin.systemd:
+        name: vector
+        enabled: true
+    - name: Ensure vector bin directory exists
+      ansible.builtin.file:
+        path: "{{ vector_install_dir }}/bin"
+        state: directory
+        mode: '0755'
+    - name: Create symlink to vector binary
+      ansible.builtin.file:
+        src: "{{ vector_install_dir }}/vector-x86_64-unknown-linux-gnu/bin/vector"
+        dest: "{{ vector_install_dir }}/bin/vector"
+        state: link
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+- name: Setup Nginx (default config)
+  hosts: lighthouse
+  become: true
+  tags: nginx
+  handlers:
+    - name: Restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+  tasks:
+    - name: Install Nginx (RedHat)
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure Nginx is running and enabled
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Allow Nginx to make outbound connections (SELinux)
+      ansible.posix.seboolean:
+        name: httpd_can_network_connect
+        state: true
+        persistent: true
+      when:
+        - ansible_selinux is defined
+        - ansible_selinux.status == "enabled"
+
+    - name: Deploy temporary welcome page
+      ansible.builtin.copy:
+        content: "<h1>Nginx is running</h1>"
+        dest: /usr/share/nginx/html/index.html
+        mode: '0644'
+
+- name: Install LightHouse from Git
+  hosts: lighthouse
+  become: true
+  tags: lighthouse
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+  pre_tasks:
+    - name: Lighthouse | Install Git
+      ansible.builtin.dnf:
+        name: git
+        state: present
+      when: ansible_os_family == "RedHat"
+
+  tasks:
+    - name: Lighthouse | Clone from Git
+      ansible.builtin.git:
+        repo: "{{ lighthouse_vcs }}"
+        version: master
+        dest: "{{ lighthouse_location_dir }}"
+
+    - name: Lighthouse | Deploy nginx config
+      ansible.builtin.template:
+        src: lighthouse.conf.j2
+        dest: "{{ nginx_conf_path }}"
+        mode: '0644'
+      notify: Reload nginx

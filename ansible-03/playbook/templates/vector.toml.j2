@@ -1,0 +1,15 @@
+[sources.system]
+type = "journald"
+data_dir = "/var/lib/vector"
+
+[sinks.clickhouse_logs]
+type           = "clickhouse"
+inputs         = ["system"]
+endpoint       = "http://{{ clickhouse_host }}:{{ clickhouse_port }}"
+database       = "logs"
+table          = "logs"
+compression    = "none"
+healthcheck    = true
+
+skip_unknown_fields  = true
+date_time_best_effort = true
