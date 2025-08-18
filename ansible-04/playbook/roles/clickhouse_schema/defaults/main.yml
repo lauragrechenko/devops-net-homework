@@ -1,0 +1,13 @@
+clickhouse_login_user: testuser
+clickhouse_login_password: "password"
+clickhouse_port: 9000
+
+clickhouse_tables:
+  - name: logs.logs
+    ddl: |
+      CREATE TABLE IF NOT EXISTS logs.logs (
+        timestamp DateTime,
+        message   String,
+        host      String,
+        source    String
+      ) ENGINE = MergeTree ORDER BY timestamp

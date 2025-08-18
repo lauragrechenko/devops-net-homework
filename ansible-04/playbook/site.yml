@@ -1,0 +1,53 @@
+---
+- name: Setup Clickhouse
+  hosts: clickhouse
+  tags: clickhouse
+  roles:
+    - clickhouse
+    - clickhouse_schema
+ 
+- name: Setup Vector
+  hosts: vector
+  tags: vector
+  become: true
+  roles:
+    - vector
+
+- name: Setup lighthouse (default config)
+  hosts: lighthouse
+  become: true
+  tags: lighthouse
+  roles:
+    - nginx_base
+    - lighthouse
+
+# - name: Install LightHouse from Git
+#   hosts: lighthouse
+#   become: true
+#   tags: lighthouse
+#   handlers:
+#     - name: Reload nginx
+#       ansible.builtin.service:
+#         name: nginx
+#         state: reloaded
+
+#   pre_tasks:
+#     - name: Lighthouse | Install Git
+#       ansible.builtin.dnf:
+#         name: git
+#         state: present
+#       when: ansible_os_family == "RedHat"
+
+#   tasks:
+#     - name: Lighthouse | Clone from Git
+#       ansible.builtin.git:
+#         repo: "{{ lighthouse_vcs }}"
+#         version: master
+#         dest: "{{ lighthouse_location_dir }}"
+
+#     - name: Lighthouse | Deploy nginx config
+#       ansible.builtin.template:
+#         src: lighthouse.conf.j2
+#         dest: "{{ nginx_conf_path }}"
+#         mode: '0644'
+#       notify: Reload nginx

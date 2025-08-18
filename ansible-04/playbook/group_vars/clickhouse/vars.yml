@@ -1,0 +1,26 @@
+clickhouse_version: "latest"
+
+clickhouse_repo_baseurl: "https://packages.clickhouse.com/rpm/stable"
+clickhouse_repo_key: "https://packages.clickhouse.com/rpm/stable/repodata/repomd.xml.key"
+
+gpgcheck: false
+
+clickhouse_dbs_custom:
+  - name: logs
+    state: present
+
+clickhouse_users_custom:
+  - name: "testuser"
+    password_sha256_hex: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+    networks: "{{ clickhouse_networks_default }}"
+    profile: "default"
+    quota: "default"
+    dbs: [ logs ]
+    comment: "classic user with plain password"
+
+clickhouse_networks_default:
+  - "0.0.0.0/0"
+  - "::/0"
+
+clickhouse_listen_host_default:
+  - "0.0.0.0"

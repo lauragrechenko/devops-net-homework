@@ -1,0 +1,7 @@
+- name: Create logs table via CLI
+  become: true
+  ansible.builtin.command: >
+    clickhouse-client -u "{{ clickhouse_login_user }}"
+    --password "{{ clickhouse_login_password }}"
+    -q "{{ item.ddl | replace('\n',' ') }}"
+  loop: "{{ clickhouse_tables }}"

@@ -1,0 +1,4 @@
+files/*
+roles/clickhouse/*
+roles/vector/*
+roles/lighthouse/*

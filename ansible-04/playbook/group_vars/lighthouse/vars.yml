@@ -1,0 +1,5 @@
+---
+lighthouse_vcs: "https://github.com/VKCOM/lighthouse.git"
+lighthouse_location_dir: "/var/www/lighthouse"
+nginx_conf_path: "/etc/nginx/conf.d/lighthouse.conf"
+server_name: "localhost"

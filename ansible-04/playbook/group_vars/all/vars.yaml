@@ -1,0 +1,4 @@
+---
+clickhouse_host: "158.160.185.155"
+clickhouse_port: "8123"
+ansible_os_family: RedHat
