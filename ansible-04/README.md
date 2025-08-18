@@ -40,11 +40,12 @@
 [репозиторий](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-04).
 
 11. Ссылки на репозитории с roles
-[clickhouse](https://github.com/lauragrechenko/ansible-clickhouse)
 
-[lighthouse](https://github.com/lauragrechenko/lighthouse-role)
+- [clickhouse](https://github.com/lauragrechenko/ansible-clickhouse)
 
-[vector](https://github.com/lauragrechenko/vector-role)
+- [lighthouse](https://github.com/lauragrechenko/lighthouse-role)
+
+- [vector](https://github.com/lauragrechenko/vector-role)
 
 
 Результаты запуска playbook с ролями на хостах:
