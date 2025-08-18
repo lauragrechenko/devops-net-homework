@@ -41,7 +41,9 @@
 
 11. Ссылки на репозитории с roles
 [clickhouse](https://github.com/lauragrechenko/ansible-clickhouse)
+
 [lighthouse](https://github.com/lauragrechenko/lighthouse-role)
+
 [vector](https://github.com/lauragrechenko/vector-role)
 
 
