@@ -1,6 +1,7 @@
 # Домашнее задание к занятию 5 «Тестирование roles»
 
 [Ссылка на репозиторий Vector-role со всеми изменениями и тэгами](https://github.com/lauragrechenko/vector-role).
+[Ссылка на изменения clickhouse-role](https://github.com/lauragrechenko/ansible-clickhouse/tree/master/molecule/ubuntu_focal)
 
 
 ## Подготовка к выполнению
@@ -20,7 +21,8 @@
 ### Molecule
 
 1. Запустили `molecule test -s ubuntu_focal` внутри корневой директории clickhouse-role, посмотрели на вывод команды. Данная команда отработала с ошибками.
-Обновили код для работы с установленной версией molecule. [Ссылка на изменения](https://github.com/lauragrechenko/ansible-clickhouse/tree/master/molecule/ubuntu_focal).
+Обновили код для работы с установленной версией molecule.
+[Ссылка на изменения](https://github.com/lauragrechenko/ansible-clickhouse/tree/master/molecule/ubuntu_focal).
 Результаты запуска тестов:
 - `PLAY [Converge]`
 ![alt text](screenshots/01.png)
