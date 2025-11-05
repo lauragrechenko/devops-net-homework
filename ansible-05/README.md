@@ -45,7 +45,7 @@
 ### Tox
 
 1. Добавили в директорию с vector-role файлы из [директории](./example).
-2. Запустили `docker run --privileged=True -v ./:/opt/vector-role -w /opt/vector-role -it aragast/netology:latest /bin/bash`, где path_to_repo — путь до корня репозитория с vector-role на файловой системе.
+2. Запустили `docker run --privileged=True -v ./:/opt/vector-role -w /opt/vector-role -it aragast/netology:latest /bin/bash`.
 3. Внутри контейнера выполнили команду `tox`, получили ошибки:
 ![alt text](screenshots/06.png)
 
