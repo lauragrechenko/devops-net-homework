@@ -49,10 +49,11 @@
 
 Обновили файлы tox-requirements.txt и tox.ini.
 Создали новый docker-image с версиями python 3.9, 3.10, 3,11.
+В созданном docker-image нет docker поэтому в качестве команды в tox.ini использовали ansible-lint.
 
 ![alt text](screenshots/09.png)
 
-Результаты запуска команды tox
+Результаты запуска команды tox (ansible-lint):
 ![alt text](screenshots/07.png)
 ![alt text](screenshots/08.png)
 
