@@ -1,6 +1,7 @@
 # Домашнее задание к занятию 6 «Создание собственных модулей»
 
 [Ссылка на созданную ansible-galaxy collection: обязательная часть задания](https://github.com/lauragrechenko/net-devops-learning/tree/v1.0.0/learning)
+
 [Ссылка на созданный архив netology_devops-learning-1.0.0.tar.gz](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-06/playbook)
 
 ## Подготовка к выполнению
