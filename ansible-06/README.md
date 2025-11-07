@@ -89,6 +89,14 @@
 ![alt text](screenshots/14.png)
 
 6. В итоге коллекция обязательно содержит: clickhouse-role, lighthouse-role, vector-role, два модуля: `dev_write_module` и модуль `yc_instance` управления Yandex Cloud хостами и playbook, который демонстрирует создание Observability стека.
+
+P.S. При повторном запуске мы видим что одна из задач отмечена всегда как changed, потому что Ansible не умеет понять, изменил ли наш DDL что-то в ClickHouse. 
+
+![alt text](screenshots/15.png)
+
+![alt text](screenshots/16.png)
+
+Модуль command видит лишь «команда выполнена успешно» и считает, что были изменения. Даже CREATE TABLE IF NOT EXISTS … не помогает. Для идемпотентности мы могли бы добавить предварительную проверку и условный запуск DDL - сначала спрашиваем у ClickHouse, есть ли таблица, затем создаём только если её нет.
 ---
 
 ### Как оформить решение задания
