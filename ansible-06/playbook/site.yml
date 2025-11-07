@@ -1,0 +1,15 @@
+---
+# - name: Test module
+#   hosts: localhost
+#   tasks:
+#     - name: Write a file with content
+#       dev_write_module:
+#         path: /tmp/hello.txt
+#         content: "See you, ansible-world!"
+
+- name: Test role
+  hosts: localhost
+  collections:
+    - netology_devops.learning
+  roles:
+    - dev_write

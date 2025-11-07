@@ -1,0 +1,5 @@
+---
+  - src: https://github.com/lauragrechenko/net-devops-learning.git
+    scm: git
+    version: "v1.0.0"
+    name: dev_write
