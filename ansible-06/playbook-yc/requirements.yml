@@ -1,0 +1,17 @@
+---
+  - src: https://github.com/lauragrechenko/net-devops-learning.git
+    scm: git
+    version: "v1.1.0"
+    name: dev_write
+  - src: https://github.com/lauragrechenko/ansible-clickhouse
+    scm: git
+    version: "1.0.0"
+    name: clickhouse
+  - src: https://github.com/lauragrechenko/lighthouse-role
+    scm: git
+    version: "1.0.0"
+    name: lighthouse
+  - src: https://github.com/lauragrechenko/vector-role
+    scm: git
+    version: "1.0.0"
+    name: vector

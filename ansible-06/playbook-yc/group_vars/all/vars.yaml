@@ -1,0 +1,4 @@
+---
+clickhouse_host: "{{ hostvars['clickhouse-01']['ansible_host'] | default('localhost') }}"
+clickhouse_port: "8123"
+ansible_os_family: RedHat

@@ -1,0 +1,58 @@
+---
+- name: Create 3 YC VMs
+  hosts: localhost
+  connection: local
+  vars:
+    yc_folder_id: "b1g4vhp2shscb9od4rnn"
+    yc_subnet_id: "fl8s0thcpg86ati7d5sm"
+    yc_image_id: "fd88gogpduub1f9j7lke" # Centos Stream 9
+    yc_zone:      "ru-central1-d"
+    yc_ssh_user:  "yc-user"
+    yc_ssh_key:   "{{ lookup('env','HOME') + '/.ssh/id_rsa_yc.pub' }}"
+
+    # optionally override names/sizes
+    yc_vms:
+      - name: clickhouse
+        cores: 2
+        memory_gb: 4
+      - name: vector
+        cores: 2
+        memory_gb: 4
+      - name: lighthouse
+        cores: 2
+        memory_gb: 2
+
+  roles:
+    - role: yc_vms
+
+  post_tasks:
+    - name: Wait for VMs to become reachable via SSH
+      ansible.builtin.wait_for:
+        host: "{{ item.public_ip }}"
+        port: 22
+        timeout: 300
+        state: started
+      loop: "{{ yc_results.results }}"
+      when: item.public_ip is defined
+
+- name: Setup Clickhouse
+  hosts: clickhouse
+  tags: clickhouse
+  roles:
+    - clickhouse
+    - clickhouse_schema
+
+- name: Setup Vector
+  hosts: vector
+  tags: vector
+  become: true
+  roles:
+    - vector
+
+- name: Setup lighthouse (default config)
+  hosts: lighthouse
+  become: true
+  tags: lighthouse
+  roles:
+    - nginx_base
+    - lighthouse

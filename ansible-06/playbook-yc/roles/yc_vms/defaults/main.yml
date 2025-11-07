@@ -1,0 +1,17 @@
+---
+yc_folder_id: ""
+yc_zone: "ru-central1-d"
+yc_subnet_id: ""
+yc_image_id: ""
+yc_platform_id: "standard-v2"
+yc_cores: 2
+yc_memory_gb: 2
+yc_disk_gb: 10
+yc_disk_type: "network-hdd"
+yc_core_fraction: 5
+yc_preemptible: true
+yc_nat: true
+yc_ssh_key: ""
+
+yc_vms:
+  - name: demo-1  

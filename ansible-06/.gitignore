@@ -1,1 +1,4 @@
 ansible/
+playbook-yc/roles/clickhouse/
+playbook-yc/roles/lighthouse/
+playbook-yc/roles/vector/

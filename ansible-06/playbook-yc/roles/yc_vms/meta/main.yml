@@ -1,0 +1,7 @@
+---
+galaxy_info:
+  author: Laura Grechenko
+  description: Create YC instances via yc_instance module
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.14"
+dependencies: []

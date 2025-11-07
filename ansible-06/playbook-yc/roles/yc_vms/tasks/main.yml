@@ -1,0 +1,50 @@
+---
+- name: Validate required vars
+  ansible.builtin.assert:
+    that:
+      - yc_folder_id | length > 0
+      - yc_subnet_id | length > 0
+      - yc_image_id  | length > 0
+    fail_msg: "yc_folder_id, yc_subnet_id, yc_image_id must be provided"
+
+- name: Create YC instances
+  netology_devops.learning.yc_instance:
+    state: present
+    name: "{{ item.name }}"
+    folder_id: "{{ yc_folder_id }}"
+    zone: "{{ item.zone | default(yc_zone) }}"
+    subnet_id: "{{ item.subnet_id | default(yc_subnet_id) }}"
+    image_id: "{{ item.image_id | default(yc_image_id) }}"
+    platform_id: "{{ item.platform_id | default(yc_platform_id) }}"
+    cores: "{{ item.cores | default(yc_cores) }}"
+    memory_gb: "{{ item.memory_gb | default(yc_memory_gb) }}"
+    disk_gb: "{{ item.disk_gb | default(yc_disk_gb) }}"
+    disk_type: "{{ item.disk_type | default(yc_disk_type) }}"
+    core_fraction: "{{ item.core_fraction | default(yc_core_fraction) }}"
+    preemptible: "{{ item.preemptible | default(yc_preemptible) }}"
+    nat: "{{ item.nat | default(yc_nat) }}"
+    ssh_key: "{{ (item.ssh_key | default(yc_ssh_key)) | default(omit) }}"
+  loop: "{{ yc_vms }}"
+  register: yc_results
+
+- name: Show created/ensured instances
+  ansible.builtin.debug:
+    var: yc_results.results | map(attribute='instance_id') | list
+
+- name: Add created hosts to dynamic inventory
+  ansible.builtin.add_host:
+    name: "{{ item.name }}-01"
+    ansible_host: "{{ item.public_ip }}"
+    ansible_user: "{{ yc_ssh_user | default('admin') }}"
+    ansible_ssh_private_key_file: "{{ yc_ssh_key | replace('.pub', '') }}"
+    ansible_python_interpreter: "{{ yc_python_interpreter | default('/usr/bin/python3') }}"
+    groups: "{{ item.name }}"
+  loop: "{{ yc_results.results }}"
+  when: item.public_ip is defined
+  changed_when: false
+
+- name: Display dynamic inventory
+  ansible.builtin.debug:
+    msg: "Added {{ item.name }}-01 with IP {{ item.public_ip }} to group {{ item.name }}"
+  loop: "{{ yc_results.results }}"
+  when: item.public_ip is defined
