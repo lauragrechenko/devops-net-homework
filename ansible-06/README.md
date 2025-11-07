@@ -1,6 +1,7 @@
 # Домашнее задание к занятию 6 «Создание собственных модулей»
 
 [Ссылка на созданную ansible-galaxy collection: обязательная часть задания](https://github.com/lauragrechenko/net-devops-learning/tree/v1.0.0/learning)
+[Ссылка на созданный архив netology_devops-learning-1.0.0.tar.gz](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-06/playbook)
 
 ## Подготовка к выполнению
 
@@ -52,7 +53,7 @@
 
 **Шаг 13.** Создали .tar.gz этой collection: `ansible-galaxy collection build` в корневой директории collection.
 
-**Шаг 14.** Создали ещё одну директорию любого наименования, перенесли туда single task playbook и архив c collection.
+**Шаг 14.** Создали ещё одну директорию `playbook`, перенесли туда single task playbook и архив c collection.
 
 **Шаг 15.** Установили collection из локального архива: `ansible-galaxy collection install netology_devops-learning-1.0.0.tar.gz`.
 ![alt text](screenshots/06.png)
@@ -68,21 +69,26 @@
 [Ссылка на созданную ansible-galaxy collection (включающая yc_instance)](https://github.com/lauragrechenko/net-devops-learning/tree/v1.1.0/learning)
 
 1. Реализовали свой модуль для создания хостов в Yandex Cloud.
-2. Модуль имеент зависимость от `yc`, основной функционал: создание ВМ с нужным сайзингом на основе нужной ОС.
+2. Модуль имеет зависимость от `yc`, основной функционал: создание ВМ с нужным сайзингом на основе нужной ОС.
 3. Модуль может формировать динамическое inventory.
 4. Протестировали модуль на идемпотентность, исполнимость. Добавили этот модуль в свою коллекцию.
+   
 ![alt text](screenshots/09.png)
 
 ![alt text](screenshots/10.png)
 
 ![alt text](screenshots/11.png)
 
+
 5. Изменили playbook так, чтобы он умел создавать инфраструктуру под inventory, а после устанавливал весь стек Observability на нужные хосты и настраивал его.
+   
 ![alt text](screenshots/12.png)
 
-6. В итоге коллекция обязательно содержит: clickhouse-role, lighthouse-role, vector-role, два модуля: `dev_write_module` и модуль `yc_instance` управления Yandex Cloud хостами и playbook, который демонстрирует создание Observability стека.
 ![alt text](screenshots/13.png)
+
 ![alt text](screenshots/14.png)
+
+6. В итоге коллекция обязательно содержит: clickhouse-role, lighthouse-role, vector-role, два модуля: `dev_write_module` и модуль `yc_instance` управления Yandex Cloud хостами и playbook, который демонстрирует создание Observability стека.
 ---
 
 ### Как оформить решение задания
