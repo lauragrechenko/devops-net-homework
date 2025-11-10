@@ -1,7 +1,8 @@
 # Домашнее задание к занятию «Запуск приложений в K8S»
 
-[Ссылка на yaml файлы Задания 1](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-06/playbook)
-[Ссылка на yaml файлы Задания 2](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-06/playbook)
+[Ссылка на yaml файлы Задания 1](https://github.com/lauragrechenko/devops-net-homework/tree/master/k8s-03/1)
+
+[Ссылка на yaml файлы Задания 2](https://github.com/lauragrechenko/devops-net-homework/tree/master/k8s-03/2)
 
 ### Цель задания
 
