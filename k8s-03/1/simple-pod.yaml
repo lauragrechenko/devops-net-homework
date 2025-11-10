@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: netdev-multitool
+  labels: 
+    app: netdev-multittol
+spec:
+  containers:
+  - name: netdev-multittol
+    image: wbitt/network-multitool:latest
+    ports:
+    - containerPort: 80
