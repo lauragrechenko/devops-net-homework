@@ -1,7 +1,8 @@
 # Домашнее задание к занятию «Базовые объекты K8S»
 
-[Ссылка на yaml pod](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-06/playbook)
-[Ссылка на yaml pod + service](https://github.com/lauragrechenko/devops-net-homework/tree/master/ansible-06/playbook)
+[Ссылка на yaml pod](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-02/simple-pod.yaml)
+
+[Ссылка на yaml pod + service](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-02/netology-web.yaml)
 
 ### Цель задания
 
