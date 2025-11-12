@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: back-tool
+  ports:
+    - name: http-tool
+      protocol: TCP
+      port: 8080
+      targetPort: 8080   
