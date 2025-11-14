@@ -52,10 +52,10 @@
 Вывод команды чтения файла:
 
   ![alt text](screenshots/01.png)
-  
-  ![alt text](screenshots/02.png)
 
 Описание пода с контейнерами:
+  
+  ![alt text](screenshots/02.png)
 
   ![alt text](screenshots/03.png)
 
@@ -138,7 +138,7 @@
 - использовать StorageClass с реальным provisioner (например, microk8s.io/hostpath)
   ![alt text](screenshots/10.png)
 
-  Видим, что PV был динасически создан.
+  Видим, что PV был динамически создан.
 
 
 
