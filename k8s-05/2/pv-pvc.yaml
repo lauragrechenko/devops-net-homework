@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: local-volume
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  hostPath:
+    path: /var/k8s-05
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: local-volume-claim
+spec:
+  volumeName: local-volume
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi  
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-exchange-pvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apps-data-exchange
+  template:
+    metadata:
+      labels:
+        app: apps-data-exchange
+    spec:
+      containers:
+      - name: busy-app
+        image: busybox
+        command: ["/bin/sh", "-c"] 
+        args: 
+          - |
+              while true; do
+                date >> /var/data/test-file
+                sleep 5
+              done
+        volumeMounts:
+        - name: data-exchange-vol
+          mountPath: /var/data
+      - name: tool-app
+        image: wbitt/network-multitool:latest
+        command: ["/bin/sh", "-c"]
+        args: ["tail -f /var/data/test-file"]
+        volumeMounts:
+        - name: data-exchange-vol
+          mountPath: /var/data
+      volumes:
+      - name: data-exchange-vol
+        persistentVolumeClaim:
+          claimName: local-volume-claim
