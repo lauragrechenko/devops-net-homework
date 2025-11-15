@@ -21,7 +21,7 @@
 
 ### Задание 1
 
-1. Используя директорию [help](./help) внутри этого домашнего задания, запустите связку prometheus-grafana.
+1. Используя официальную документацию grafana и prometheus реализовали [docker-compose.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-02/1/docker-compose.yaml), [prometheus.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-02/1/prometheus.yml)  внутри этого домашнего задания, запустили связку prometheus-grafana.
 2. Зайдите в веб-интерфейс grafana, используя авторизационные данные, указанные в манифесте docker-compose.
 3. Подключите поднятый вами prometheus, как источник данных.
 4. Решение домашнего задания — скриншот веб-интерфейса grafana со списком подключенных Datasource.
@@ -67,12 +67,18 @@ node_filesystem_avail_bytes{job="node",mountpoint="/"}
 
   ![alt text](screenshots/03.png)
 
+Завели канал нотификации Telegram, и отправили туда тестовые события.
+
+Скриншот тестовых событий из канала нотификаций
+
   ![alt text](screenshots/04.png)
   
 ## Задание 4
 
 1. Сохраните ваш Dashboard.Для этого перейдите в настройки Dashboard, выберите в боковом меню «JSON MODEL». Далее скопируйте отображаемое json-содержимое в отдельный файл и сохраните его.
 2. В качестве решения задания приведите листинг этого файла.
+   
+[листинг импортируемого файла] (https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-02/Mon-02-task-2-1763218114205.json)
 
 ---
 
