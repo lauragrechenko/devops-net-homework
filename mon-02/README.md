@@ -78,7 +78,7 @@ node_filesystem_avail_bytes{job="node",mountpoint="/"}
 1. Сохраните ваш Dashboard.Для этого перейдите в настройки Dashboard, выберите в боковом меню «JSON MODEL». Далее скопируйте отображаемое json-содержимое в отдельный файл и сохраните его.
 2. В качестве решения задания приведите листинг этого файла.
    
-[листинг импортируемого файла] (https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-02/Mon-02-task-2-1763218114205.json)
+[листинг импортируемого файла](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-02/Mon-02-task-2-1763218114205.json)
 
 ---
 
