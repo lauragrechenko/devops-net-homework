@@ -1,0 +1,35 @@
+filebeat.inputs:
+  - type: filestream
+    id: docker-logs
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+
+    parsers:
+      - container:
+          stream: all
+          format: auto
+
+    processors:
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+      - decode_json_fields:
+          fields: ["message"]
+          target: "json"
+          overwrite_keys: true
+          add_error_key: true
+
+# output.elasticsearch:
+#   hosts: ["https://es01:9200"]
+#   username: "${ELASTICSEARCH_USERNAME}"
+#   password: "${ELASTICSEARCH_PASSWORD}"
+
+#   ssl:
+#     certificate_authorities:
+#       - /usr/share/filebeat/certs/ca/ca.crt
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+logging.json: true
+logging.metrics.enabled: false
