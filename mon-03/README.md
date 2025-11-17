@@ -19,7 +19,10 @@
 
 ## Задание повышенной сложности
 
-Не используйте директорию [help](./help) при выполнении домашнего задания.
+- [logstash.conf](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-03/logstash/pipeline/logstash.conf)
+- [docker-compose.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-03/docker-compose.yaml)
+- [filebeat.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-03/filebeat.yaml)
+- [dummy.py](https://github.com/lauragrechenko/devops-net-homework/blob/master/mon-03/dummy.py)
 
 ## Задание 1
 
