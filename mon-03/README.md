@@ -26,7 +26,6 @@
 Вам необходимо поднять в докере и связать между собой:
 
 - elasticsearch (hot и warm ноды);
-  ![alt text](screenshots/04.png)
 - logstash;
 - kibana;
 - filebeat.
