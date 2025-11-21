@@ -28,6 +28,7 @@
 3. В переменных чарта измените образ приложения для изменения версии.
 
 - Результаты тестирования
+
     ![alt text](screenshots/02.png)
 
 - Обновления с учетом добавления Secret.
@@ -52,6 +53,8 @@
 
     ![alt text](screenshots/06.png)
 
+- Ссылки на манифесты
+
   [values.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/values.yaml)
 
   [deployment.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/templates/deployment.yaml)
@@ -70,6 +73,7 @@
 1. Домашняя работа оформляется в своём Git репозитории в файле README.md. Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
 2. Файл README.md должен содержать скриншоты вывода необходимых команд `kubectl`, `helm`, а также скриншоты результатов.
 3. Репозиторий должен содержать тексты манифестов или ссылки на них в файле README.md.
+
 
 
 
