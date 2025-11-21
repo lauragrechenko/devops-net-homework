@@ -27,11 +27,13 @@
 2. Каждый компонент приложения деплоится отдельным deployment’ом или statefulset’ом.
 3. В переменных чарта измените образ приложения для изменения версии.
 
-    ![alt text](screenshots/01.png)
-
     ![alt text](screenshots/02.png)
 
+Обновления с учетом добавления Secret.
+
     ![alt text](screenshots/03.png)
+    
+    ![alt text](screenshots/01.png)
 
 ------
 ### Задание 2. Запустить две версии в разных неймспейсах
@@ -44,19 +46,21 @@
 
     ![alt text](screenshots/05.png)
 
+    Образы разных приложений были запушены в docker hub.
+
     ![alt text](screenshots/06.png)
 
-  [values.yaml]()
+  [values.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/values.yaml)
 
-  [deployment.yaml]()
+  [deployment.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/templates/deployment.yaml)
 
-  [service.yaml]()
+  [service.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/templates/service.yaml)
   
-  [postgres-statefulset.yaml]()
+  [postgres-statefulset.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/templates/postgres-statefulset.yaml)
   
-  [postgres-service.yaml]()
+  [postgres-service.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/templates/postgres-service.yaml)
   
-  [app-secret.yaml]()
+  [app-secret.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-07/shared/demo-app-chart/templates/app-secret.yaml)
   
 
 ### Правила приёма работы
@@ -64,4 +68,5 @@
 1. Домашняя работа оформляется в своём Git репозитории в файле README.md. Выполненное домашнее задание пришлите ссылкой на .md-файл в вашем репозитории.
 2. Файл README.md должен содержать скриншоты вывода необходимых команд `kubectl`, `helm`, а также скриншоты результатов.
 3. Репозиторий должен содержать тексты манифестов или ссылки на них в файле README.md.
+
 
