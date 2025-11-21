@@ -1,0 +1,26 @@
+app:
+  replicaCount: 1
+  image:
+    repository: lauragrechenko/demo_app
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: ClusterIP
+    port: 4000
+  secret:
+    name: demo-app-chart-secrets
+    secretKeyBase: ""
+
+postgres:
+  image:
+    repository: postgres
+    tag: "15"
+  auth:
+    username: postgres
+    password: postgres
+    database: demo_app_prod
+  storage:
+    size: 1Gi
+
+nameOverride: ""
+fullnameOverride: ""
