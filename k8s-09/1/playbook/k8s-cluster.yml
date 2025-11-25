@@ -1,0 +1,212 @@
+---
+- name: Prepare all Kubernetes nodes (master + workers)
+  hosts: k8s_nodes
+  become: true
+  tags: [prepare]
+
+  vars:
+    kubernetes_version_repo: "v1.30" 
+    pod_network_cidr: "10.244.0.0/16"
+    cri_socket: "unix:///run/containerd/containerd.sock"
+
+  tasks:
+    - name: Disable swap (runtime)
+      command: swapoff -a
+      when: ansible_facts['swaptotal_mb'] | default(0) > 0
+      changed_when: false
+
+    - name: Disable swap in fstab (persistent)
+      replace:
+        path: /etc/fstab
+        regexp: '(^.*\s+swap\s+.*$)'
+        replace: '# \1'
+      register: swap_fstab
+
+    - name: Ensure kernel modules config exists
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Load kernel module overlay
+      modprobe:
+        name: overlay
+        state: present
+
+    - name: Load kernel module br_netfilter
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Configure sysctl for Kubernetes networking
+      copy:
+        dest: /etc/sysctl.d/k8s.conf
+        content: |
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.bridge.bridge-nf-call-ip6tables = 1
+          net.ipv4.ip_forward                 = 1
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Apply sysctl params
+      command: sysctl --system
+      changed_when: false
+
+    - name: Install containerd
+      apt:
+        name: containerd
+        state: present
+        update_cache: true
+
+    - name: Ensure containerd config directory exists
+      file:
+        path: /etc/containerd
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Generate default containerd config
+      command: containerd config default
+      register: containerd_config
+      changed_when: false
+
+    - name: Write containerd config
+      copy:
+        dest: /etc/containerd/config.toml
+        content: "{{ containerd_config.stdout }}"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable systemd cgroups in containerd
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+
+    - name: Restart and enable containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: true
+
+    - name: Ensure Kubernetes APT key directory exists
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Add Kubernetes APT repository key
+      shell: |
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version_repo }}/deb/Release.key \
+          | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      args:
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Add Kubernetes APT repository
+      copy:
+        dest: /etc/apt/sources.list.d/kubernetes.list
+        content: |
+          deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version_repo }}/deb/ /
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install kubelet, kubeadm, kubectl
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: true
+
+    - name: Enable and start kubelet
+      systemd:
+        name: kubelet
+        enabled: true
+        state: started
+
+
+- name: Initialize control plane on master
+  hosts: master
+  become: true
+
+  vars:
+    pod_network_cidr: "10.244.0.0/16"
+    cri_socket: "unix:///run/containerd/containerd.sock"
+
+  tasks:
+    - name: Run kubeadm init (if not already initialized)
+      command: >
+        kubeadm init
+        --pod-network-cidr={{ pod_network_cidr }}
+        --cri-socket={{ cri_socket }}
+      args:
+        creates: /etc/kubernetes/admin.conf
+      register: kubeadm_init
+
+    - name: Create .kube directory for ubuntu user
+      file:
+        path: /home/ubuntu/.kube
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: '0755'
+
+    - name: Copy admin.conf to user kubeconfig
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        owner: ubuntu
+        group: ubuntu
+        mode: '0600'
+        remote_src: true
+
+    - name: Install Flannel CNI
+      become_user: ubuntu
+      environment:
+        KUBECONFIG: /home/ubuntu/.kube/config
+      command: >
+        kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+      args:
+        creates: /tmp/flannel-installed
+      register: flannel_apply
+      changed_when: "'created' in flannel_apply.stdout or 'configured' in flannel_apply.stdout"
+
+    - name: Mark flannel as installed
+      file:
+        path: /tmp/flannel-installed
+        state: touch
+
+    - name: Get kubeadm join command
+      command: kubeadm token create --print-join-command
+      register: kubeadm_join_cmd
+      changed_when: false
+
+    - name: Set kubeadm join command fact on master
+      set_fact:
+        join_command: "{{ kubeadm_join_cmd.stdout }}"
+
+
+- name: Join worker nodes to the cluster
+  hosts: workers
+  become: true
+
+  vars:
+    master_host: "{{ groups['master'][0] }}"
+    cri_socket: "unix:///run/containerd/containerd.sock"
+
+  tasks:
+    - name: Run kubeadm join on workers
+      command: "{{ hostvars[master_host].join_command }} --cri-socket={{ cri_socket }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf

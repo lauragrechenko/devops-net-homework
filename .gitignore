@@ -8,6 +8,7 @@ vb_id_ed25519
 05-virt-02-iaac/db50d2a7-2dd2-4beb-b2ff-3f1c04e5d11a
 05-virt-02-iaac/packer_1.9.4_darwin_amd64.zip
 authorized_key.json
+key.json
 
 tmp.txt
 mon-01/sandbox/
