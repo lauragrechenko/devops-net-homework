@@ -24,6 +24,9 @@
 4. Способ установки выбрать самостоятельно.
 
 ### Решение (kubeadm)
+[Terraform code](https://github.com/lauragrechenko/devops-net-homework/tree/master/k8s-09/1/src)
+[Ansible code](https://github.com/lauragrechenko/devops-net-homework/tree/master/k8s-09/1/playbook)
+
 #### 1. Изначально произвели установку вручную с 2 нодами: 1 мастер и 1 рабочая нода.
 
 После установки и настройки согласно инструкции - инициализация мастер-ноды.
@@ -182,6 +185,8 @@ kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Doc
 ![alt text](screenshots/22.png)
 
 ### Решение (kubespray)
+[inventor.ini](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-09/2-1/inventory.ini)
+
 Из предыдущего задания использовали Terraform для создания 3 мастер-нод, 2 рабочих нод:
 
 ![alt text](screenshots/23.png)
