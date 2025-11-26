@@ -99,7 +99,7 @@ ansible-playbook -i inventory.ini k8s-cluster.yml
 ansible-playbook -i inventory.ini k8s-cluster.yml --tags "prepare_nodes"
 ```
 
-![alt text](screenshots/14.png)
+![alt text](screenshots/13.png)
 
 На всех трёх мастерах установлен:
 ```
