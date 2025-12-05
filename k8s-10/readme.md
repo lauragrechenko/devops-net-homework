@@ -1,8 +1,8 @@
 # Домашнее задание к занятию «Как работает сеть в K8s»
 
-- [allow_nothing.yaml]()
-- [deployment.yaml]()
-- [policy.yaml]()
+- [allow_nothing.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-10/shared/allow_nothing.yaml)
+- [deployment.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-10/shared/deployment.yaml)
+- [policy.yaml](https://github.com/lauragrechenko/devops-net-homework/blob/master/k8s-10/shared/policy.yaml)
 
 ### Цель задания
 
