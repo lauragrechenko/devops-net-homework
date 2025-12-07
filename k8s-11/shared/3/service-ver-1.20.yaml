@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service-ver-1-20
+  namespace: web-ns
+spec:
+  selector:
+    app: nginx
+    version: v1
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8082
+  type: ClusterIP

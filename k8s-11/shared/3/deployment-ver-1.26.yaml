@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-ver-1-26
+  namespace: web-ns
+  labels:
+    app: nginx
+    version: v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: nginx
+        version: v2
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.26.2
+        ports:
+        - containerPort: 8082
+        volumeMounts:
+        - name: nginx-html
+          mountPath: /usr/share/nginx/html/index.html
+          subPath: index.html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      volumes:
+        - name: nginx-html
+          configMap:
+            name: nginx-configmap-ver-1-26
+            items:
+            - key: index.html
+              path: index.html
+        - name: nginx-config
+          configMap:
+            name: nginx-configmap-ver-1-26
+            items:
+            - key: default.conf
+              path: default.conf
