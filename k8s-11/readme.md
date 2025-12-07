@@ -45,7 +45,7 @@ Canary / A/B / Dark — не подходят, так как предполаг�
 
 ### Задание 2. Обновить приложение
 
-[Ссылка]() на манифесты.
+[Ссылка](https://github.com/lauragrechenko/devops-net-homework/tree/master/k8s-11/shared/2) на манифесты.
 
 1. Создали deployment приложения с контейнерами nginx и multitool. Версию nginx взяли 1.26.2. Количество реплик — 5.
 ![alt text](screenshots/01.png)
@@ -81,7 +81,7 @@ Rollback деплоя != rollback конфигов.
 
 ### Задание 3*. Создать Canary deployment
 
-[Ссылка]() на манифесты.
+[Ссылка](https://github.com/lauragrechenko/devops-net-homework/tree/master/k8s-11/shared/3) на манифесты.
 
 Использовали [инструкцию](https://kubernetes.github.io/ingress-nginx/examples/canary/) для настройки canary deployment.
 
