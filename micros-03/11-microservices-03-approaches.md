@@ -163,7 +163,7 @@ OpenSearch Dashboards/Kibana дают:
 
 1) **Сбор метрик со всех хостов**
 - На каждый хост ставим **node_exporter** → даёт базовые метрики ОС.
-- Prometheus регулярно “скрейпит” (pull-модель) exporters по HTTP.
+- Prometheus регулярно собирает метрики (pull-модель) exporters по HTTP.
 
 2) **Ресурсы хостов (CPU/RAM/HDD/Network)**
 - Это напрямую покрывает **node_exporter**: CPU load, memory, disk I/O/space, network traffic и т.д.
