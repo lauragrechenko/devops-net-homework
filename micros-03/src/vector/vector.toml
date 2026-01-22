@@ -1,0 +1,60 @@
+# Data directory for buffering
+data_dir = "/var/lib/vector"
+
+# Source: Collect logs from Docker containers
+[sources.docker_logs]
+type = "docker_logs"
+docker_host = "unix:///var/run/docker.sock"
+
+exclude_containers = ["vector", "elasticsearch", "kibana", "es-setup"]
+
+# Transform: Parse and enrich logs
+[transforms.parse_logs]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+  .timestamp = now()
+  .service = .container_name
+
+  # Remove problematic nested label fields
+  del(.label)
+
+  parsed, err = parse_json(.message)
+  if err == null {
+    ., _ = merge(., parsed)
+  }
+
+  if !exists(.level) {
+    .level = "info"
+  }
+'''
+
+# Sink: Send to ElasticSearch
+[sinks.elasticsearch]
+type = "elasticsearch"
+inputs = ["parse_logs"]
+endpoints = ["http://elasticsearch:9200"]
+mode = "bulk"
+
+# Authentication
+[sinks.elasticsearch.auth]
+strategy = "basic"
+user = "elastic"
+password = "qwerty123456"
+
+# Index naming pattern: logs-YYYY.MM.DD
+[sinks.elasticsearch.bulk]
+index = "logs-%Y-%m-%d"
+action = "create"
+
+# Buffering configuration
+[sinks.elasticsearch.buffer]
+type = "disk"
+max_size = 268435488  # 256 MB
+when_full = "block"
+
+# Retry configuration
+[sinks.elasticsearch.request]
+retry_attempts = 5
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
