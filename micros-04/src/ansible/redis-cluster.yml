@@ -1,0 +1,139 @@
+---
+- name: Install and configure Redis instances (2 per VM)
+  hosts: redis
+  become: true
+  vars:
+    redis_ports: [7000, 7003]
+    redis_conf_dir: /etc/redis/cluster
+    redis_data_root: /var/lib/redis
+  tasks:
+    - name: Install Redis
+      apt:
+        name:
+          - redis-server
+          - redis-tools
+        state: present
+        update_cache: yes
+
+    - name: Create config dir
+      file:
+        path: "{{ redis_conf_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Create data/log dirs
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ redis_data_root }}"
+        - /var/log/redis
+
+    - name: Create per-port data dirs
+      file:
+        path: "{{ redis_data_root }}/{{ item }}"
+        state: directory
+        mode: "0755"
+        owner: redis
+        group: redis
+      loop: "{{ redis_ports }}" 
+
+    - name: Write Redis cluster configs
+      copy:
+        dest: "{{ redis_conf_dir }}/redis-{{ item }}.conf"
+        mode: "0644"
+        content: |
+          port {{ item }}
+          bind 0.0.0.0
+          protected-mode no
+
+          cluster-enabled yes
+          cluster-config-file {{ redis_data_root }}/{{ item }}/nodes.conf
+          cluster-node-timeout 5000
+
+          appendonly yes
+          dir {{ redis_data_root }}/{{ item }}
+
+          # Announce reachable IP/ports (important for MOVED redirects)
+          cluster-announce-ip {{ ansible_host }}
+          cluster-announce-port {{ item }}
+          cluster-announce-bus-port {{ item | int + 10000 }}
+
+          logfile /var/log/redis/redis-{{ item }}.log
+      loop: "{{ redis_ports }}"
+
+    - name: Create systemd template unit for redis instances
+      copy:
+        dest: /etc/systemd/system/redis@.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Redis instance on port %i
+          After=network.target
+
+          [Service]
+          User=redis
+          Group=redis
+          ExecStart=/usr/bin/redis-server {{ redis_conf_dir }}/redis-%i.conf
+          ExecStop=/usr/bin/redis-cli -p %i shutdown
+          Restart=always
+          LimitNOFILE=65536
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start redis instances
+      systemd:
+        name: "redis@{{ item }}"
+        enabled: yes
+        state: started
+      loop: "{{ redis_ports }}"
+
+    - name: Wait for Redis ports
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: "{{ item }}"
+        timeout: 30
+      loop: "{{ redis_ports }}"
+
+- name: Create Redis Cluster (3 masters + 3 replicas)
+  hosts: vm1
+  become: true
+  vars:
+    # Cross-VM replica placement for HA:
+    # VM1: Shard1 (master), Replica2 (of Shard2)
+    # VM2: Shard2 (master), Replica3 (of Shard3)
+    # VM3: Shard3 (master), Replica1 (of Shard1)
+    vm1_ip: "{{ hostvars['vm1'].ansible_host }}"
+    vm2_ip: "{{ hostvars['vm2'].ansible_host }}"
+    vm3_ip: "{{ hostvars['vm3'].ansible_host }}"
+  tasks:
+    - name: Create cluster (idempotent-ish)
+      shell: |
+        set -e
+        # if already clustered, exit clean
+        if redis-cli -p 7000 cluster info 2>/dev/null | grep -q "cluster_state:ok"; then
+          echo "Cluster already OK"
+          exit 0
+        fi
+
+        # Order: 3 masters first, then 3 replicas
+        # Replicas assigned to masters in order (4th->1st, 5th->2nd, 6th->3rd)
+        redis-cli --cluster create \
+          {{ vm1_ip }}:7000 {{ vm2_ip }}:7000 {{ vm3_ip }}:7000 \
+          {{ vm3_ip }}:7003 {{ vm1_ip }}:7003 {{ vm2_ip }}:7003 \
+          --cluster-replicas 1 --cluster-yes
+      args:
+        executable: /bin/bash
+
+    - name: Show cluster info
+      shell: |
+        redis-cli -c -p 7000 cluster info
+        redis-cli -c -p 7000 cluster nodes
+      args:
+        executable: /bin/bash     

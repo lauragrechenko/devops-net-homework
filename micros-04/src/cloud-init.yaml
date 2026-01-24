@@ -1,0 +1,11 @@
+users:
+  - default
+  - name: ansible
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGqoUwQiF5fllsZA4/UA/LLvCMb1cStJrTmg/sW3ziMR lauragrechenko@Lauras-MBP"
+package_update: true
+packages:
+  - python3

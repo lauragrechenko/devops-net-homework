@@ -1,0 +1,147 @@
+services:
+  # PostgreSQL
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shop_sessions_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Phoenix App
+  # app:
+  #   build: .
+  #   # Use host network to reach Multipass VMs (192.168.64.x)
+  #   # Comment out if using Docker-only Redis
+  #   network_mode: "host"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     # redis-cluster-init:
+  #     #   condition: service_completed_successfully
+  #   environment:
+  #     # With network_mode: host, use localhost to reach db container's exposed port
+  #     DATABASE_URL: ecto://postgres:postgres@localhost:5432/shop_sessions_prod
+  #     SECRET_KEY_BASE: "Zq3vJx8kL2mN9pRtW5yB7dF0hJ4sU6aE1cG8iK3oM5nQ2rT7wY9xA0bC4fH6jL8m"
+  #     PHX_HOST: localhost
+  #     PHX_SERVER: "true"
+  #     # Redis Cluster on VMs (Ansible-deployed)
+  #     REDIS_HOST_1: 192.168.64.3
+  #     REDIS_HOST_2: 192.168.64.4
+  #     REDIS_HOST_3: 192.168.64.5
+  #     REDIS_PORT: "7000"
+  #   # ports not needed with network_mode: host (app listens on host:4000 directly)
+  #   # ports:
+  #   #   - "4000:4000"
+  #   command: >
+  #     sh -c "
+  #       bin/shop_sessions eval 'ShopSessions.Release.migrate()'
+  #       bin/shop_sessions start
+  #     "
+
+  # # Redis Cluster - 6 nodes (with hostname announcement for Docker networking)
+  # redis-1:
+  #   image: redis:7-alpine
+  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --cluster-announce-hostname redis-1 --cluster-announce-port 6379 --cluster-preferred-endpoint-type hostname
+  #   volumes:
+  #     - redis-1-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # redis-2:
+  #   image: redis:7-alpine
+  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --cluster-announce-hostname redis-2 --cluster-announce-port 6379 --cluster-preferred-endpoint-type hostname
+  #   volumes:
+  #     - redis-2-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # redis-3:
+  #   image: redis:7-alpine
+  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --cluster-announce-hostname redis-3 --cluster-announce-port 6379 --cluster-preferred-endpoint-type hostname
+  #   volumes:
+  #     - redis-3-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # redis-4:
+  #   image: redis:7-alpine
+  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --cluster-announce-hostname redis-4 --cluster-announce-port 6379 --cluster-preferred-endpoint-type hostname
+  #   volumes:
+  #     - redis-4-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # redis-5:
+  #   image: redis:7-alpine
+  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --cluster-announce-hostname redis-5 --cluster-announce-port 6379 --cluster-preferred-endpoint-type hostname
+  #   volumes:
+  #     - redis-5-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # redis-6:
+  #   image: redis:7-alpine
+  #   command: redis-server --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --cluster-announce-hostname redis-6 --cluster-announce-port 6379 --cluster-preferred-endpoint-type hostname
+  #   volumes:
+  #     - redis-6-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # # Initialize Redis Cluster (3 masters + 3 replicas)
+  # redis-cluster-init:
+  #   image: redis:7-alpine
+  #   depends_on:
+  #     redis-1:
+  #       condition: service_healthy
+  #     redis-2:
+  #       condition: service_healthy
+  #     redis-3:
+  #       condition: service_healthy
+  #     redis-4:
+  #       condition: service_healthy
+  #     redis-5:
+  #       condition: service_healthy
+  #     redis-6:
+  #       condition: service_healthy
+  #   restart: "no"
+  #   command: >
+  #     sh -c "echo 'Creating Redis Cluster...' &&
+  #     redis-cli --cluster create redis-1:6379 redis-2:6379 redis-3:6379 redis-4:6379 redis-5:6379 redis-6:6379 --cluster-replicas 1 --cluster-yes ||
+  #     echo 'Cluster already exists or failed' &&
+  #     redis-cli -h redis-1 cluster info"
+
+volumes:
+  postgres_data:
+  # redis-1-data:
+  # redis-2-data:
+  # redis-3-data:
+  # redis-4-data:
+  # redis-5-data:
+  # redis-6-data:
