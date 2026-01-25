@@ -2,8 +2,6 @@
 set -euo pipefail
 
 # Creates/starts 3 Multipass VMs for a Redis Cluster lab.
-# Requires: multipass installed
-# Optional: put your cloud-init at ./cloud-init.yaml (recommended for Ansible SSH access)
 
 VMS=(vm1 vm2 vm3)
 
@@ -17,16 +15,13 @@ ensure_vm() {
   local name="$1"
 
   if multipass info "$name" >/dev/null 2>&1; then
-    echo "✔ $name exists"
+    echo "$name exists"
     return
   fi
 
-  echo "➕ creating $name..."
-  if [[ -f "$CLOUD_INIT" ]]; then
-    multipass launch --name "$name" --cpus "$CPUS" --memory "$MEM" --disk "$DISK" --cloud-init "$CLOUD_INIT" "$IMAGE"
-  else
-    multipass launch --name "$name" --cpus "$CPUS" --memory "$MEM" --disk "$DISK" "$IMAGE"
-  fi
+  echo "creating $name..."
+  
+  multipass launch --name "$name" --cpus "$CPUS" --memory "$MEM" --disk "$DISK" --cloud-init "$CLOUD_INIT" "$IMAGE"
 }
 
 start_vm() {
@@ -53,7 +48,3 @@ for vm in "${VMS[@]}"; do
   ip="$(multipass info "$vm" | awk -F': ' '/IPv4/ {print $2; exit}')"
   echo "  $vm: $ip"
 done
-
-echo
-echo "Tip: set custom resources like:"
-echo "  CPUS=1 MEM=768M DISK=4G ./mp-up.sh"

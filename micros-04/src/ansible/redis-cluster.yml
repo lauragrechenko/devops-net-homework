@@ -106,9 +106,9 @@
   become: true
   vars:
     # Cross-VM replica placement for HA:
-    # VM1: Shard1 (master), Replica2 (of Shard2)
-    # VM2: Shard2 (master), Replica3 (of Shard3)
-    # VM3: Shard3 (master), Replica1 (of Shard1)
+    # VM1: Shard1 (master), Replica3 (of Shard3)
+    # VM2: Shard2 (master), Replica2 (of Shard1)
+    # VM3: Shard3 (master), Replica1 (of Shard2)
     vm1_ip: "{{ hostvars['vm1'].ansible_host }}"
     vm2_ip: "{{ hostvars['vm2'].ansible_host }}"
     vm3_ip: "{{ hostvars['vm3'].ansible_host }}"

@@ -89,6 +89,39 @@ ReplicaSet/Deployment — увеличиваем количество pod’ов
 
 ![11-04-01](https://user-images.githubusercontent.com/1122523/114282923-9b16f900-9a4f-11eb-80aa-61ed09725760.png)
 
+### Результаты
+
+- Подготовили Ansible playbook `redis-cluster.yml` для установки Redis и сборки Redis Cluster.
+- Подготовили скрипт `mp-up.sh` для создания тестовых VM в Multipass на macOS.
+- Подготовили тестовое web-приложение на Elixir для проверки сохранения session token в Redis Cluster.
+
+#### Тестирование
+
+1) Запустили `mp-up.sh` и создали 3 VM в Multipass:
+
+![Multipass VMs](screenshots/04.png)
+
+2) Запустили Ansible playbook `redis-cluster.yml` (установка Redis + запуск 2 инстансов на каждой VM + сборка кластера):
+
+![Ansible run 1](screenshots/01.png)
+
+![Ansible run 2](screenshots/02.png)
+
+3) Проверили роли в кластере и что пары master/replica разнесены по разным VM (анти-аффинити):
+
+![Cluster nodes](screenshots/03.png)
+
+Распределение по VM получилось таким:
+
+| VM  | Port 7000         | Port 7003              |
+|-----|-------------------|------------------------|
+| VM1 | Shard 1 (master)  | Replica of Shard 3     |
+| VM2 | Shard 2 (master)  | Replica of Shard 1     |
+| VM3 | Shard 3 (master)  | Replica of Shard 2     |
+
+4) Проверили интеграцию с web-приложением: при логине session token сохраняется в Redis Cluster (ключ попадает на один из шардов):
+
+![Token stored in Redis](screenshots/05.png)
 ---
 
 ### Как оформить ДЗ?
