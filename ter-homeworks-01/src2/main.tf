@@ -13,13 +13,13 @@ provider "docker" {
 }
 
 resource "random_password" "mysql_pass_root" {
-  length = 16
+  length           = 16
   special          = true
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "random_password" "mysql_pass_user" {
-  length = 16
+  length  = 16
   special = false
 }
 

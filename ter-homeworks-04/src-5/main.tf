@@ -42,7 +42,7 @@ module "test_cluster" {
 }
 
 module "test_db" {
-  source = "./modules/mysql_db"
+  source     = "./modules/mysql_db"
   cluster_id = module.test_cluster.cluster_id
 
   db_name = var.mysql_db_name

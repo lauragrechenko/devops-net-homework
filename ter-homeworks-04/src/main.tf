@@ -1,8 +1,8 @@
 module "test_vpc" {
-  source      = "./modules/vpc"
-  env_name    = var.env_name
-  vpc_name    = var.vpc_name
-  subnets = [{ zone = var.default_zone, cidr = var.default_cidr}]
+  source   = "./modules/vpc"
+  env_name = var.env_name
+  vpc_name = var.vpc_name
+  subnets  = [{ zone = var.default_zone, cidr = var.default_cidr }]
 }
 
 module "test_vm" {

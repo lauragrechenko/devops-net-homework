@@ -40,7 +40,7 @@ resource "yandex_compute_instance" "master" {
     subnet_id = yandex_vpc_subnet.k8s.id
     nat       = true
   }
-  
+
   scheduling_policy {
     preemptible = var.vm_preemptible
   }
@@ -57,8 +57,8 @@ resource "yandex_compute_instance" "workers" {
   platform_id = var.vm_platform_id
 
   resources {
-    cores  = var.worker_cores
-    memory = var.worker_memory_gb
+    cores         = var.worker_cores
+    memory        = var.worker_memory_gb
     core_fraction = var.vm_cpu_fraction
   }
 
@@ -73,7 +73,7 @@ resource "yandex_compute_instance" "workers" {
     subnet_id = yandex_vpc_subnet.k8s.id
     nat       = true
   }
-  
+
   scheduling_policy {
     preemptible = var.vm_preemptible
   }

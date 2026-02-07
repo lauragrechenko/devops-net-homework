@@ -1,0 +1,1 @@
+ssh_pub_key_path = "~/.ssh/id_ed25519_yc_test.pub"
