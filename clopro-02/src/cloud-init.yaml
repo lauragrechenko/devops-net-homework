@@ -1,0 +1,21 @@
+#cloud-config
+write_files:
+  - path: /var/www/html/index.html
+    owner: root:root
+    permissions: "0644"
+    content: |
+      <!doctype html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>PandoraBox — Instance Group</title>
+      </head>
+      <body>
+        <h1>Hello from Netology-hw-2!</h1>
+        <p>Image from Object Storage:</p>
+        <img src="${logo_url}" alt="PB logo" style="max-width: 600px;">
+      </body>
+      </html>
+
+runcmd:
+  - systemctl restart apache2 || systemctl restart httpd || true
