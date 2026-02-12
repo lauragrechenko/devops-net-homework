@@ -1,0 +1,18 @@
+#cloud-config
+package_update: true
+packages:
+  - apache2
+
+write_files:
+  - path: /var/www/html/index.html
+    owner: root:root
+    permissions: "0644"
+    content: |
+      <html>
+      <h1>Hello from Netology-hw-2, aws part!</h1>
+      <img src="${logo_url}" alt="PB logo" style="max-width:600px;">
+      </html>
+
+runcmd:
+  - systemctl enable apache2
+  - systemctl start apache2

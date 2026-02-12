@@ -39,7 +39,7 @@ resource "yandex_compute_instance_group" "vms_ig" {
 
     metadata = {
       ssh-keys = "${var.ssh_user_name}:${local.ssh_pub_key}"
-      user-data = templatefile("../cloud-init.yaml", {
+      user-data = templatefile("./cloud-init.yaml", {
         logo_url = local.pb_logo_url
       })
 
