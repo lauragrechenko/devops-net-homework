@@ -173,16 +173,30 @@ variable "nlb_healthcheck" {
   description = "NLB health check configuration"
 }
 
+variable "alb_protocol" {
+  type        = string
+  default     = "HTTP"
+  description = "Protocol for ALB target group and listener"
+}
+
 variable "alb_healthcheck" {
   type = object({
+    path                = string
     healthy_threshold   = number
     unhealthy_threshold = number
     interval            = number
   })
   default = {
+    path                = "/"
     healthy_threshold   = 2
     unhealthy_threshold = 2
     interval            = 30
   }
   description = "ALB health check configuration"
+}
+
+variable "asg_associate_public_ip" {
+  type        = bool
+  default     = false
+  description = "Associate public IP to instances in ASG (false for private subnet)"
 }

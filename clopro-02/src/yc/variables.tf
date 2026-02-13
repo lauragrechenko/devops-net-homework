@@ -60,6 +60,12 @@ variable "storage_secret_key" {
   description = "S3-compatible storage secret key"
 }
 
+variable "s3_bucket_suffix" {
+  type        = string
+  default     = "laura-08-02-26"
+  description = "Unique suffix for S3 bucket name"
+}
+
 variable "pb_logo_source" {
   type        = string
   description = "Local path to the logo image file"
