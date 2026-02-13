@@ -3,7 +3,7 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   subnets            = [aws_subnet.public.id, aws_subnet.public_2.id]
-  security_groups    = []
+  security_groups    = [aws_security_group.alb_sg.id]
 
   tags = {
     Name        = "${local.name_prefix}-alb"
@@ -22,6 +22,7 @@ resource "aws_lb_target_group" "web" {
     healthy_threshold   = var.alb_healthcheck.healthy_threshold
     unhealthy_threshold = var.alb_healthcheck.unhealthy_threshold
     interval            = var.alb_healthcheck.interval
+    path                = "/"
   }
 }
 

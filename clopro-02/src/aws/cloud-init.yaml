@@ -1,4 +1,7 @@
 #cloud-config
+bootcmd:
+  - echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4
+
 package_update: true
 packages:
   - apache2
