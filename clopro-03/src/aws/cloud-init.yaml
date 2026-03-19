@@ -1,0 +1,26 @@
+#cloud-config
+bootcmd:
+  - echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4
+
+package_update: true
+packages:
+  - apache2
+  - unzip
+
+write_files:
+  - path: /var/www/html/index.html
+    owner: root:root
+    permissions: "0644"
+    content: |
+      <html>
+      <h1>Hello from Netology-hw-3, aws part!</h1>
+      <img src="${logo_url}" alt="PB logo" style="max-width:600px;">
+      </html>
+
+runcmd:
+  - systemctl enable apache2
+  - systemctl start apache2
+  - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+  - unzip /tmp/awscliv2.zip -d /tmp
+  - /tmp/aws/install
+  - /usr/local/bin/aws s3 cp /var/www/html/index.html s3://${bucket_name}/
