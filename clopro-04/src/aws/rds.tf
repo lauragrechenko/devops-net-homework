@@ -32,7 +32,7 @@ resource "aws_db_instance" "mysql_replica_1" {
   identifier          = "${local.name_prefix}-mysql-replica-1"
   replicate_source_db = aws_db_instance.mysql.identifier
   instance_class      = var.db_instance_class
-  availability_zone   = var.default_availability_zone
+  availability_zone   = var.availability_zone_secondary
 
   vpc_security_group_ids = [aws_security_group.rds.id]
   skip_final_snapshot    = true
