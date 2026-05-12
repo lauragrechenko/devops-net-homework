@@ -493,5 +493,3 @@ plan calls for this resource to be destroyed.
    ```
 
 4. Обе правки в `bucket.tf` **откатываются** (`git checkout -- bucket.tf`). Не следует коммитить `force_destroy = true` или ослабленный `prevent_destroy` - эти защиты существуют именно для того, чтобы случайный `terraform apply` будущего оператора не уничтожил state-bucket.
-
-YC NAT gateway бесплатный; bastion, VM Atlantis и VM для k8s расходуют ₽ всё время, пока работают.
