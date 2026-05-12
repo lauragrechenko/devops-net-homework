@@ -34,7 +34,7 @@ kubespray (локально)
 addons (CI ▶ addons)
 ```
 
-На этапе bootstrap создаются bucket для state и сервисные аккаунты, от которых зависят все остальные модули, - поэтому первый запуск `bootstrap apply` выполняется локально под *личными* учётными данными администратора; все дальнейшие операции идут уже под созданными сервисными аккаунтами. Корневой модуль `platform/` - единственный, который CI применяет напрямую: запуск Atlantis.
+На этапе bootstrap создаётся state-бакет и сервисные аккаунты, от которых зависят все остальные модули, - поэтому первый запуск `bootstrap apply` выполняется локально под *личными* учётными данными администратора; все дальнейшие операции идут уже под созданными сервисными аккаунтами. Корневой модуль `platform/` - единственный, который CI применяет напрямую: запуск Atlantis.
 
 ### Настройка shell (direnv)
 
@@ -106,7 +106,7 @@ Outputs bootstrap используются скриптами далее по э
 
 На этапе bootstrap генерируется пара ключей ED25519, обе части сохраняются в Lockbox `${name_prefix}-ssh-key` (метка `role=vm-ssh-key`). Корневые модули `platform/` и `main/` читают публичную часть из outputs bootstrap (без обращения к локальному файлу на машине).
 
-```   
+```bash
 # пишет ~/.ssh/id_ed25519_pandora (chmod 600)
 "$REPO_ROOT/infra/scripts/fetch_ssh_key.sh"
 ```
@@ -155,7 +155,7 @@ yc lockbox secret add-version --id "$OP_IP_LOCKBOX_ID" \
    - `ATLANTIS_GITLAB_TOKEN` (Masked + Protected) = `glpat-...` из шага 1
    - `ATLANTIS_WEBHOOK_SECRET` (Masked + Protected) = случайная строка из шага 2
 
-**Заполнение через CI:** выполнить push в `master`, открыть свежий pipeline и запустить `seed:atlantis-lockbox`. Оно вызывает Lockbox `addVersion` со значениями заданными в CI variables.
+**Заполнение через CI:** выполнить push в `master`, открыть свежий pipeline и запустить job `seed:atlantis-lockbox`. Job вызывает Lockbox `addVersion` со значениями, заданными в CI variables.
 
 Альтернатива с локальной машины (если CI недоступен):
 ```bash
@@ -175,7 +175,7 @@ yc lockbox secret add-version --id "$LOCKBOX_ID" \
 2. `bringup:platform` - применяет `platform/` и создаёт VM Atlantis. Cloud-init читает `atlantis-app` при загрузке.
 3. `bringup:check-atlantis` - запрашивает у YC состояние NLB Atlantis через `getTargetStates`. Первая проверка сразу может завершиться ошибкой, если статус не `HEALTHY`. Если job завершился ошибкой, можно сделать повторный запуск примерно через минуту - cloud-init нужно несколько минут, чтобы загрузить env-файлы из Lockbox при первой загрузке.
 
-   В конце job также выводит текущий `atlantis_webhook_url` - в каждом репозитории, которым управляет Atlantis (пути, совпадающие с `atlantis_repo_allowlist`), нужно перейти в **Project → Settings → Webhooks → `atlantis-webhook`** и вставить URL. Триггеры: **Push events, Comments, Merge request events**. Внешний IP NLB меняется при каждом запуске «с нуля»; secret - нет. **Особенность UI GitLab:** поле secret сбрасывается при сохранении, если в нём ничего не введено, поэтому secret тоже придётся ввести заново. Получить его можно из Lockbox `atlantis-app-env`: `yc lockbox payload get --id "$LOCKBOX_ID" --format json | jq -r '.entries[] | select(.key == "webhook_secret") | .text_value'`.
+   В конце job также выводит текущий `atlantis_webhook_url` - в каждом репозитории, которым управляет Atlantis (пути, совпадающие с `atlantis_repo_allowlist`), нужно перейти в **Project → Settings → Webhooks → `atlantis-webhook`** и вставить URL. Триггеры: **Push events, Comments, Merge request events**. Внешний IP NLB меняется при каждом запуске «с нуля»; secret - нет. **Особенность UI GitLab:** поле secret сбрасывается при сохранении, если в нём ничего не введено, поэтому secret тоже придётся ввести заново. Получить его можно из Lockbox с label `role=atlantis-app-env`: `yc lockbox payload get --id "$LOCKBOX_ID" --format json | jq -r '.entries[] | select(.key == "webhook_secret") | .text_value'`.
 
 Повторный запуск `bringup:platform` используется для выкатки нового значения `var.atlantis_version` - Atlantis не может управлять самим собой, поэтому это job - единственный способ обновлять Atlantis.
 
@@ -224,7 +224,7 @@ atlantis apply -p pandora-box
 
 ## 5. Установка Kubernetes через Kubespray
 
-Тяжёлая одноразовая операция на весь срок жизни кластера - занимает примерно 30–60 минут на кластере из 3 master и 2 worker нод. Запускается с локальной машины: для bootstrap self-managed кластера выбран документированный runbook, а не SaaS CI, в основном потому, что отлаживать упавшую play удалённо (нет `--start-at-task`, нет возможности заглянуть в inventory посреди прогона) болезненно, и в итоге всё равно приходится переходить в локальный shell.
+Тяжёлая одноразовая операция на весь срок жизни кластера - занимает примерно 30–60 минут на кластере из 3 нод: 1 master и 2 worker. Запускается с локальной машины: для bootstrap self-managed кластера выбран документированный runbook, а не SaaS CI, в основном потому, что отлаживать упавший playbook удалённо (нет `--start-at-task`, нет возможности заглянуть в inventory посреди прогона) болезненно, и в итоге всё равно приходится переходить в локальный shell.
 
 **Клонирование Kubespray** в `infra/ansible/kubespray/` (каталог исключён через `.gitignore` - см. [`.gitignore`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/.gitignore) - поскольку включение примерно 4000 файлов в репозиторий сильно бы его раздуло). Тег фиксируется явно; этот проект разрабатывался под `v2.30.0`:
 ```bash
@@ -300,7 +300,7 @@ ESO непрерывно синхронизирует учётные данны�
 - `pandora-box/yc-registry` → image-pull secret типа `dockerconfigjson`. Подключается в pod specs через `imagePullSecrets: [{ name: yc-registry }]`.
 - `pandora-box/backups-s3` → имя bucket и HMAC-пара (`BACKUPS_S3_*`) для backup-writer приложения PandoraBox. Pod подключает через `envFrom: { secretRef: { name: backups-s3 } }`.
 
-ESO требует один императивный seed (`external-secrets/yc-lockbox-sa-key` - Secret с authorized-key) - provider ESO для YC Lockbox поддерживает только аутентификацию через authorized-key. На этапе bootstrap соответствующие приватные ключи сохраняются в записях Lockbox по одному на потребителя: см. [terraform/yc/bootstrap/storage_csi.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/bootstrap/storage_csi.tf), [registry.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/bootstrap/registry.tf).
+ESO требует один императивный seed (`external-secrets/yc-lockbox-sa-key` - Secret с authorized-key) - provider ESO для YC Lockbox поддерживает только аутентификацию через authorized-key. Ключ самого ESO выдаётся bootstrap как sensitive output `eso_sa_key` и один раз создаётся в Kubernetes Secret скриптом `install_eso.sh`. Остальные секреты, которые синхронизирует ESO, лежат в Lockbox по одному на потребителя: см. [terraform/yc/bootstrap/storage_csi.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/bootstrap/storage_csi.tf), [registry.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/bootstrap/registry.tf).
 
 **Запуск job на master pipeline** (предпочтительный способ - аутентификация через kubeconfig от GitLab Agent из [шага 7](#7-установка-gitlab-agent-включает-управление-кластером-из-ci)): `addons:eso` - выполняет [`install_eso.sh`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/scripts/install_eso.sh).
 
@@ -340,7 +340,7 @@ kubectl apply -f "$REPO_ROOT/infra/k8s/csi/v1.2.0/"
 
 ## 10. Установка Envoy Gateway
 
-NLB (создаётся `terraform apply` на шаге 3) принимает трафик на :80 и перенаправляет его на NodePort 30080 (data-plane Envoy) на worker-нодах. NodePort должен совпадать с `var.ingress_nodeport`. Workloads публикуют HTTP-эндпойнты через `HTTPRoute`, привязанные к общекластерному Gateway `public`.
+NLB (создаётся при применении `main` на шаге 3a) принимает трафик на :80 и перенаправляет его на NodePort 30080 (data-plane Envoy) на всех k8s-нодах. NodePort должен совпадать с `var.ingress_nodeport`. Workloads публикуют HTTP-эндпойнты через `HTTPRoute`, привязанные к общекластерному Gateway `public`.
 
 Устанавливает контроллер Envoy Gateway ([k8s/gateway/values.yaml](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/k8s/gateway/values.yaml)) и применяет `GatewayClass` и `Gateway` ([k8s/gateway/gateway-class.yaml](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/k8s/gateway/gateway-class.yaml), [k8s/gateway/gateway.yaml](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/k8s/gateway/gateway.yaml)).
 
@@ -466,7 +466,7 @@ mv backend.tf backend.tf.disabled
 terraform init -migrate-state -force-copy
 ```
 
-На state-bucket установлены `lifecycle.prevent_destroy = true` и включённый versioning, поэтому обычный `terraform destroy` завершается ошибкой:
+На state-bucket установлен `lifecycle.prevent_destroy = true` и включён versioning, поэтому обычный `terraform destroy` завершается ошибкой:
 
 ```
 Resource yandex_storage_bucket.tfstate has lifecycle.prevent_destroy set, but the

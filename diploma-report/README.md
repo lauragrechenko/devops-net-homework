@@ -483,6 +483,8 @@ flowchart TB
 - **DNS.** В текущей работе доступ по IP NLB.
 - **TLS / cert-manager.** HTTPS не настроен, всё на :80. Зависит от DNS.
 - **Та же инфраструктура в AWS.** Parallel-deploy на AWS - для сравнения операционного опыта.
+- **Ротация Grafana admin password через ESO.** Четвёртый ExternalSecret по образцу `yc-registry` / `backups-s3`; сейчас `adminPassword: admin` в values + смена при первом входе.
+- **State locking на S3-бэкенде (`use_lockfile = true`).** Защита от гонки одновременных apply; Atlantis сериализует себя, но локальный apply во время Atlantis-run может конфликтнуть.
 
 ---
 
