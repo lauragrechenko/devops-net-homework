@@ -1,0 +1,29 @@
+{{- if .Values.httpRoute.enabled -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: pandora-box
+  namespace: {{ include "pandora-box.namespace" . }}
+  labels:
+    {{- include "pandora-box.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.httpRoute.parentRef.name }}
+      namespace: {{ .Values.httpRoute.parentRef.namespace }}
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: /v1/projects }
+      backendRefs:
+        - name: {{ .Values.service.webName }}
+          port: {{ .Values.service.ports.portal }}
+    - matches:
+        - path: { type: PathPrefix, value: /v1/sys }
+      backendRefs:
+        - name: {{ .Values.service.webName }}
+          port: {{ .Values.service.ports.lid }}
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: {{ .Values.service.webName }}
+          port: {{ .Values.service.ports.lid }}
+{{- end -}}

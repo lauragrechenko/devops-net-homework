@@ -1,0 +1,222 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pandora-box
+  namespace: pandora-box
+  labels:
+    app: pandora-box
+spec:
+  serviceName: pandora-box
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pandora-box
+  template:
+    metadata:
+      labels:
+        app: pandora-box
+    spec:
+      serviceAccountName: pandora-box
+      imagePullSecrets:
+        - name: yc-registry
+      initContainers:
+        - name: migrate
+          image: __PBX_IMAGE__
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MIX_ENV
+              value: "prod"
+            - name: RELEASE_DISTRIBUTION
+              value: "none"
+            - name: RELEASE_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: RELEASE_COOKIE
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: SECRET_KEY_BASE
+            - name: API_TOKEN_PEPPER
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: API_TOKEN_PEPPER
+            - name: PANDORA_KEK
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: PANDORA_KEK
+            - name: SQLITE_DIR
+              value: "/app/data/sqlite"
+            - name: ROCKSDB_DIR
+              value: "/app/data/rocksdb"
+            - name: RA_DIR
+              value: "/app/data/ra"
+            - name: MNESIA_DIR
+              value: "/app/data/mnesia"
+            - name: PBX_CLUSTERS_CONFIG
+              value: "/app/clusters.yml"
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # S3 / Yandex Object Storage
+            - name: S3_ENABLED
+              value: "true"
+            - name: S3_SCHEME
+              value: "https"
+            - name: S3_HOST
+              value: "storage.yandexcloud.net"
+            - name: S3_PORT
+              value: "443"
+            - name: S3_BUCKET
+              value: "__S3_BUCKET__"
+            - name: S3_REGION
+              value: "ru-central1"
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-s3
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-s3
+                  key: S3_SECRET_KEY
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              SVC="pandora-box"
+              BASE="pandora_box"
+              NS="${K8S_NAMESPACE}"
+              export RA_MEMBERS="${BASE}@${SVC}-0.${SVC}.${NS}.svc.cluster.local,${BASE}@${SVC}-1.${SVC}.${NS}.svc.cluster.local,${BASE}@${SVC}-2.${SVC}.${NS}.svc.cluster.local"
+              echo "Running database migrations..."
+              ./bin/pandora_box eval "PandoraBoxBackendSqlite.Migrator.migrate()"
+              echo "Migrations completed"
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      containers:
+        - name: pandora-box
+          image: __PBX_IMAGE__
+          ports:
+            - containerPort: 4000
+              name: lid
+            - containerPort: 4001
+              name: portal
+            - containerPort: 4369
+              name: epmd
+          env:
+            - name: MIX_ENV
+              value: "prod"
+            - name: RELEASE_DISTRIBUTION
+              value: "name"
+            - name: RELEASE_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: RELEASE_COOKIE
+
+            # Secrets
+            - name: SECRET_KEY_BASE
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: SECRET_KEY_BASE
+            - name: API_TOKEN_PEPPER
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: API_TOKEN_PEPPER
+            - name: PANDORA_KEK
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: PANDORA_KEK
+            - name: PBX_INIT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-box
+                  key: PBX_INIT_SECRET
+
+            # Phoenix
+            - name: PHX_SERVER
+              value: "true"
+            - name: PHX_HOST
+              value: "localhost"
+            - name: LID_PORT
+              value: "4000"
+            - name: PORTAL_PORT
+              value: "4001"
+
+            # libcluster Kubernetes strategy
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: K8S_SERVICE_NAME
+              value: "pandora-box"
+            - name: K8S_NODE_BASENAME
+              value: "pandora_box"
+
+            # Storage paths
+            - name: RA_DIR
+              value: "/app/data/ra"
+            - name: MNESIA_DIR
+              value: "/app/data/mnesia"
+            - name: SQLITE_DIR
+              value: "/app/data/sqlite"
+            - name: ROCKSDB_DIR
+              value: "/app/data/rocksdb"
+            - name: PBX_CLUSTERS_CONFIG
+              value: "/app/clusters.yml"
+
+            # S3/MinIO
+            - name: S3_ENABLED
+              value: "true"
+            - name: S3_SCHEME
+              value: "http"
+            - name: S3_HOST
+              value: "minio"
+            - name: S3_PORT
+              value: "9000"
+            - name: S3_BUCKET
+              value: "pandora-backups"
+            - name: S3_REGION
+              value: "us-east-1"
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-s3
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pandora-s3
+                  key: S3_SECRET_KEY
+
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              SVC="pandora-box"
+              BASE="pandora_box"
+              NS="${K8S_NAMESPACE}"
+              export RA_MEMBERS="${BASE}@${SVC}-0.${SVC}.${NS}.svc.cluster.local,${BASE}@${SVC}-1.${SVC}.${NS}.svc.cluster.local,${BASE}@${SVC}-2.${SVC}.${NS}.svc.cluster.local"
+              export RELEASE_NODE="${BASE}@$(hostname -f)"
+              echo "Starting PandoraBox node as ${RELEASE_NODE}"
+              exec ./bin/pandora_box start
+
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi

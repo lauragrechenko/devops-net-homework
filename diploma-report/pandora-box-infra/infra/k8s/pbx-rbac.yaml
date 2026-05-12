@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pandora-box
+  namespace: pandora-box
+  labels:
+    app: pandora-box
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pandora-box-libcluster
+  namespace: pandora-box
+  labels:
+    app: pandora-box
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "endpoints"]
+    verbs: ["get", "list", "watch"]
+    
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pandora-box-libcluster-binding
+  namespace: pandora-box
+  labels:
+    app: pandora-box
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pandora-box-libcluster
+subjects:
+  - kind: ServiceAccount
+    name: pandora-box

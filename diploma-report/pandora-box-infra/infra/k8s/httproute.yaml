@@ -1,0 +1,28 @@
+# Path routing for the pandora-box app on the shared public Gateway.
+# Longest-prefix match wins, so /v1/projects → portal, /v1/sys → lid,
+# and everything else (the fallback /) also goes to lid.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: pandora-box
+  namespace: pandora-box
+spec:
+  parentRefs:
+    - name: public
+      namespace: envoy-gateway-system
+  rules:
+    - matches:
+        - path: { type: PathPrefix, value: /v1/projects }
+      backendRefs:
+        - name: pandora-box-web
+          port: 4001
+    - matches:
+        - path: { type: PathPrefix, value: /v1/sys }
+      backendRefs:
+        - name: pandora-box-web
+          port: 4000
+    - matches:
+        - path: { type: PathPrefix, value: / }
+      backendRefs:
+        - name: pandora-box-web
+          port: 4000

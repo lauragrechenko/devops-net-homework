@@ -1,0 +1,50 @@
+# Builds a cache image containing pre-compiled RocksDB NIF.
+# Rebuild when the rocksdb dependency changes in mix.lock:
+#
+#   docker buildx build -f Dockerfile.rocksdb -t <repo>-rocksdb:latest --push .
+#
+FROM elixir:1.19.3-alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache \
+  build-base \
+  linux-headers \
+  git \
+  cmake \
+  snappy-dev \
+  zlib-dev \
+  bzip2-dev \
+  lz4-dev \
+  zstd-dev \
+  && mkdir -p /usr/include/sys \
+  && ln -sf /usr/include/unistd.h /usr/include/sys/unistd.h
+
+ARG BUILD_CORES=4
+ENV MAKEFLAGS="-j${BUILD_CORES}" \
+    CMAKE_BUILD_PARALLEL_LEVEL="${BUILD_CORES}" \
+    NIF_BUILD_MAKE_JOBS="${BUILD_CORES}" \
+    MIX_ENV=prod
+
+RUN mix local.hex --force && mix local.rebar --force
+
+COPY mix.exs mix.lock ./
+
+COPY apps/demo/mix.exs apps/demo/mix.exs
+COPY apps/pandora_box_storage/mix.exs apps/pandora_box_storage/mix.exs
+COPY apps/pandora_box_backend_relational/mix.exs apps/pandora_box_backend_relational/mix.exs
+COPY apps/pandora_box_backend_sqlite/mix.exs apps/pandora_box_backend_sqlite/mix.exs
+COPY apps/pandora_box_backend_mnesia/mix.exs apps/pandora_box_backend_mnesia/mix.exs
+COPY apps/pandora_box_backend_rocksdb/mix.exs apps/pandora_box_backend_rocksdb/mix.exs
+COPY apps/pandora_box_identity/mix.exs apps/pandora_box_identity/mix.exs
+COPY apps/pandora_box_abyss/mix.exs apps/pandora_box_abyss/mix.exs
+COPY apps/pandora_box_lid/mix.exs apps/pandora_box_lid/mix.exs
+COPY apps/pandora_box_portal/mix.exs apps/pandora_box_portal/mix.exs
+COPY apps/pandora_box_core/mix.exs apps/pandora_box_core/mix.exs
+COPY apps/pandora_box_crypto/mix.exs apps/pandora_box_crypto/mix.exs
+COPY apps/pandora_box_audit/mix.exs apps/pandora_box_audit/mix.exs
+COPY apps/pandora_box_telemetry/mix.exs apps/pandora_box_telemetry/mix.exs
+COPY apps/system_tests/mix.exs apps/system_tests/mix.exs
+
+RUN mix deps.get --only prod
+RUN mix deps.compile rocksdb

@@ -1,0 +1,43 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+  # Scrapes PandoraBoxTelemetry.MetricsEndpoint (Prometheus exposition format).
+  # Each scrape target is defined via an env var so the same config file works
+  # for both docker-compose.dev.yaml (app on host) and docker-compose.yaml
+  # (app in sibling containers on pandoranet).
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: pandora_box
+          scrape_interval: 15s
+          static_configs:
+            - targets: ${env:PBX_METRICS_SCRAPE_TARGETS}
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+
+exporters:
+  debug:
+    verbosity: detailed
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]

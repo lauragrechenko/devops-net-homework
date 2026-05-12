@@ -1,0 +1,35 @@
+# Production overrides used by CI.
+# Minio is not deployed in prod; S3 points at Yandex Object Storage.
+# The backups-s3 Secret is managed by ESO (synced from Lockbox), not by Helm.
+
+image:
+  tag: latest
+
+secrets:
+  create: false
+
+httpRoute:
+  enabled: true
+
+podMonitor:
+  enabled: true
+
+# Public hostname Phoenix uses when generating URLs (redirects, asset paths).
+# Set to the real DNS name when you have one; for now point at the gateway IP.
+#
+# ⚠️  WARNING — cleartext HTTP is enabled below. DO NOT merge this into a
+#    real production deployment. `scheme: http` means generated URLs are
+#    http and, more importantly, the gateway in front of this app is not
+#    enforcing TLS. Credentials and API tokens would travel in cleartext.
+#    Provision a TLS listener on the gateway and flip this back to `https`
+#    before putting any real data into this cluster.
+phoenix:
+  host: "89.169.189.217"
+  scheme: http
+
+s3:
+  enabled: true
+  scheme: https
+  host: storage.yandexcloud.net
+  port: 443
+  region: ru-central1

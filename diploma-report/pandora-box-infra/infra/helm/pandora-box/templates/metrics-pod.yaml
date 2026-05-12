@@ -1,0 +1,22 @@
+{{- if .Values.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "pandora-box.name" . }}
+  namespace: {{ include "pandora-box.namespace" . }}
+  labels:
+    {{- include "pandora-box.labels" . | nindent 4 }}
+    # Prometheus selects PodMonitors by this label. Must match the
+    # podMonitorSelector on the Prometheus CR (usually the helm release
+    # name of kube-prometheus-stack). Verify with:
+    #   kubectl -n monitoring get prometheus -o yaml | grep -A3 podMonitorSelector
+    release: {{ .Values.podMonitor.releaseLabel | quote }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pandora-box.selectorLabels" . | nindent 6 }}
+  podMetricsEndpoints:
+    - port: metrics
+      path: {{ .Values.podMonitor.path | quote }}
+      interval: {{ .Values.podMonitor.interval | quote }}
+{{- end }}

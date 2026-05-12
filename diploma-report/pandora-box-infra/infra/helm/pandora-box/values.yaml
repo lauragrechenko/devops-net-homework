@@ -1,0 +1,104 @@
+# The chart does not manage the Namespace by default — rely on
+# `helm -n <ns> --create-namespace` instead. Flip to true if you want Helm
+# to own the namespace resource.
+namespace:
+  create: false
+  name: pandora-box
+
+image:
+  repository: cr.yandex/crp6udg3u1mfbtb16m3v/pandora_box
+  tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - yc-registry
+
+replicaCount: 3
+
+serviceAccount:
+  create: true
+  name: pandora-box
+
+rbac:
+  create: true
+
+persistence:
+  size: 2Gi
+  accessModes:
+    - ReadWriteOnce
+
+service:
+  headlessName: pandora-box
+  webName: pandora-box-web
+  ports:
+    lid: 4000
+    portal: 4001
+    metrics: 9568
+    epmd: 4369
+
+# HTTPRoute requires the Gateway API CRDs. Off by default so local installs
+# work on plain clusters; enabled in values-prod.yaml.
+httpRoute:
+  enabled: false
+  parentRef:
+    name: public
+    namespace: envoy-gateway-system
+
+# PodMonitor requires the Prometheus Operator CRDs (installed by
+# kube-prometheus-stack). Off by default so local installs don't fail on
+# missing CRDs; enabled in values-prod.yaml.
+podMonitor:
+  enabled: false
+  # Must match Prometheus's podMonitorSelector (defaults to the helm
+  # release name of kube-prometheus-stack).
+  releaseLabel: kube-prometheus-stack
+  path: /metrics
+  interval: 30s
+
+# Renders the `pandora-box` Secret (app secrets) when create=true. The
+# `backups-s3` Secret is owned by ESO in prod (synced from Lockbox); for
+# local dev we render it from the values below. Set create=false when an
+# external process (CI / ESO) manages the Secret objects out-of-band.
+secrets:
+  create: true
+  appName: pandora-box
+  backupsName: backups-s3
+  app:
+    SECRET_KEY_BASE: "your-secret-key-base-at-least-64-chars-long-replace-in-production-please"
+    API_TOKEN_PEPPER: "your-api-token-pepper-replace-in-production"
+    RELEASE_COOKIE: "pandora_cookie"
+    PANDORA_KEK: "cGFuZG9yYV9ib3hfZGV2X2tleV9ub3RfZm9yX3Byb2Q="
+    PBX_INIT_SECRET: "k8s-init-secret-change-in-production"
+  # Key names match what ESO emits into pandora-box/backups-s3 in prod.
+  backups:
+    BACKUPS_S3_BUCKET_NAME: "pandora-backups"
+    BACKUPS_S3_ACCESS_KEY_ID: "minio"
+    BACKUPS_S3_SECRET_ACCESS_KEY: "minio123456"
+
+# Non-secret S3 connection config. Bucket name lives in the backups-s3 Secret
+# (sourced from TF in prod, from values.secrets.backups in local dev).
+s3:
+  enabled: true
+  scheme: http
+  host: minio
+  port: 9000
+  region: us-east-1
+
+phoenix:
+  host: localhost
+  # Scheme used when Phoenix generates absolute URLs (redirects, asset paths).
+  # TLS enforcement is the gateway's job — wire up a TLS listener + http→https
+  # redirect on the Envoy Gateway when certs are available.
+  scheme: https
+  lidPort: 4000
+  portalPort: 4001
+
+cluster:
+  serviceName: pandora-box
+  nodeBasename: pandora_box
+
+storagePaths:
+  ra: /app/data/ra
+  mnesia: /app/data/mnesia
+  sqlite: /app/data/sqlite
+  rocksdb: /app/data/rocksdb
+  clustersConfig: /app/clusters.yml

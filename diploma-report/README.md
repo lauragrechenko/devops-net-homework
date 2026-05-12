@@ -1,10 +1,25 @@
 # Отчёт по дипломному проекту
 
-> Дипломное задание - [README.md](README.md). Этот отчёт покрывает все пять этапов и пункты раздела «Что необходимо для сдачи задания».
+> Дипломное задание - [task.md](task.md). Этот отчёт покрывает все этапы и пункты раздела «Что необходимо для сдачи задания».
 >
-> Все детали реализации и runbook для воспроизведения собраны в [infra/README.md](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/README.md).
-
-> Репозиторий с TF-конфигурациями: [infra-pandora-box](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box).
+> Все детали реализации и runbook для воспроизведения собраны в [runbook-yc-ru.md](runbook-yc-ru.md).
+>
+> Репозиторий с инфраструктурным кодом: [infra-pandora-box](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box). Прямые ссылки на части:
+>
+> - Terraform: [`infra/terraform/`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/terraform)
+> - Ansible/Kubespray: [`infra/ansible/`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/ansible)
+> - K8s-манифесты: [`infra/k8s/`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/k8s)
+> - Скрипты: [`infra/scripts/`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/scripts)
+> - Пайплайн инфраструктуры: [`.gitlab-ci.yml`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/.gitlab-ci.yml)
+> - Atlantis: [`atlantis.yaml`](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/atlantis.yaml)
+>
+> Репозиторий приложения [laura.grechenko.pandora_box](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box) приватный. Инфраструктурно-релевантные части продублированы в этой папке отчёта - [`pandora-box-infra/`](pandora-box-infra):
+>
+> - Dockerfile'ы: [`Dockerfile`](pandora-box-infra/Dockerfile), [`Dockerfile.rocksdb`](pandora-box-infra/Dockerfile.rocksdb)
+> - Helm-чарт: [`infra/helm/pandora-box/`](pandora-box-infra/infra/helm/pandora-box)
+> - K8s-манифесты: [`infra/k8s/`](pandora-box-infra/infra/k8s)
+> - Пайплайн приложения: [`.gitlab-ci.yml`](pandora-box-infra/.gitlab-ci.yml)
+> - Контракт инфра↔приложение: [`infra/README.md`](pandora-box-infra/infra/README.md)
 
 ## Архитектура (общая схема)
 
@@ -165,7 +180,7 @@ flowchart TB
 
 **Что сделано:**
 
-- Сервисные аккаунты создаются в `bootstrap` ([infra/terraform/yc/bootstrap/](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/terraform/yc/bootstrap)) - большинству выдан узкий набор ролей. Права суперпользователя используются только при `bootstrap apply` с личного админ-аккаунта; единственное осознанное исключение среди SA - Atlantis SA с ролью folder `admin`.
+- Сервисные аккаунты создаются в `bootstrap` ([infra/terraform/yc/bootstrap/](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/terraform/yc/bootstrap)) - большинству выдан минимальный набор прав. Права суперпользователя используются только при `bootstrap apply` с личного админ-аккаунта; единственное исключение среди SA - Atlantis SA с ролью folder `admin`.
 - Backend для Terraform - S3-бакет в YC, создаётся через TF в `bootstrap`. Versioning + KMS-шифрование. Конфигурации SA/бакета (`bootstrap`) и основной инфраструктуры (`platform`, `main`, `pandora-box`) разнесены по разным папкам, как требует задание.
 - VPC и подсети в трёх зонах доступности - [infra/terraform/yc/platform/network.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/platform/network.tf).
 - Первый запуск TF-конфигурации `bootstrap` автоматизирован скриптом ([infra/scripts/bootstrap-from-scratch.sh](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/scripts/bootstrap-from-scratch.sh)): он закрывает проблему с S3-бэкендом - бакет для tfstate создаётся тем же `apply`, после чего состояние переносится в этот бакет. Все последующие `terraform apply` и `terraform destroy` запускаются как обычные команды, без скриптов.
@@ -218,7 +233,7 @@ flowchart TB
 
    ![bringup:platform green](screenshots/03-platform/01-green-bringup.png)
 
-9. **Резултат terraform apply**:
+9. **Результат terraform apply**:
 
    ![Platform apply output](screenshots/03-platform/02-platform-apply-output.png)
 
@@ -293,28 +308,7 @@ flowchart TB
 
 ---
 
-## Этап 3. Создание тестового приложения
-
-**Приложение.** Тестовый сервис - **Pandora Box** ([отдельный репозиторий](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box)): Elixir/OTP-приложение на базе Raft-консенсуса, по задачам близкое к HashiCorp Vault. Сервис stateful, storage backend pluggable (на выбор - RocksDB / Mnesia / SQLite); периодический бэкап уходит в YC Object Storage (бакет `pandora-box-backups`, scoped SA из `infra/terraform/yc/pandora-box`). Это реальное приложение, а не заглушка.
-
-**Сборка образов - два Dockerfile, два образа в реестре.**
-
-- [`Dockerfile.rocksdb`](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box/-/blob/master/Dockerfile.rocksdb) собирает RocksDB-NIF из исходников ("тяжёлый" build: `build-base`, `cmake`, `snappy/zlib/bzip2/lz4/zstd`-dev) и пушится как `cr.yandex/.../pandora_box-rocksdb:latest`. Пересобирается только при изменении rocksdb-зависимости в `mix.lock`.
-- [`Dockerfile`](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box/-/blob/master/Dockerfile) - multi-stage (`rocksdb-cache` → `build` → `runtime`). Уже скомпилированный NIF подмонтируется через `ARG ROCKSDB_CACHE_IMAGE` + `--mount=from=rocksdb-cache`, поэтому per-commit-сборка не тянет C-toolchain. Тег: `cr.yandex/.../pandora_box:$CI_COMMIT_SHORT_SHA`.
-- Оба образа собираются с BuildKit registry cache (`--cache-from`/`--cache-to type=registry,ref=...:buildcache,mode=max`) - слои переиспользуются между runner'ами без локального диска.
-
-**Реестр и аутентификация.** Container Registry - **Yandex Container Registry**, создаётся Terraform'ом ([infra/terraform/yc/bootstrap/registry.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/bootstrap/registry.tf)). CI-job обменивает GitLab OIDC JWT на короткоживущий YC IAM-токен и логинится в `cr.yandex` через `docker login --username iam` (шаблон `.yc-auth` в `.gitlab-ci.yml`). Долгоживущих учётных данных для реестра нет.
-
-**Демонстрация:**
-
-- Репозиторий с приложением и Dockerfile'ами: [laura.grechenko.pandora_box](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box).
-- **Образы в YC Container Registry.** В реестре лежат оба образа: `pandora_box-rocksdb:latest` (cache-образ с предварительно собранным RocksDB-NIF) и `pandora_box:<sha>` (per-commit образ приложения):
-
-  ![YC Container Registry: pandora_box images](screenshots/12-app/02-yc-registry.png)
-
----
-
-## Этап 4. Подготовка системы мониторинга и деплой приложения
+## Этап 3. Подготовка системы мониторинга и деплой приложения
 
 **Что сделано:**
 
@@ -376,7 +370,17 @@ flowchart TB
 
 ---
 
-## Этап 5. Установка и настройка CI/CD
+## Этап 4. Установка и настройка CI/CD
+
+**Приложение.** Тестовый сервис - **Pandora Box** ([отдельный репозиторий](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box)): Elixir/OTP-приложение на базе Raft-консенсуса, по задачам близкое к HashiCorp Vault. Сервис stateful, storage backend pluggable (на выбор - RocksDB / Mnesia / SQLite); периодический бэкап уходит в YC Object Storage (бакет `pandora-box-backups`, scoped SA из `infra/terraform/yc/pandora-box`). Это реальное приложение, а не заглушка.
+
+**Сборка образов - два Dockerfile, два образа в реестре.**
+
+- [`Dockerfile.rocksdb`](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box/-/blob/master/Dockerfile.rocksdb) собирает RocksDB-NIF из исходников ("тяжёлый" build: `build-base`, `cmake`, `snappy/zlib/bzip2/lz4/zstd`-dev) и пушится как `cr.yandex/.../pandora_box-rocksdb:latest`. Пересобирается только при изменении rocksdb-зависимости в `mix.lock`.
+- [`Dockerfile`](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box/-/blob/master/Dockerfile) - multi-stage (`rocksdb-cache` → `build` → `runtime`). Уже скомпилированный NIF подмонтируется через `ARG ROCKSDB_CACHE_IMAGE` + `--mount=from=rocksdb-cache`, поэтому per-commit-сборка не тянет C-toolchain. Тег: `cr.yandex/.../pandora_box:$CI_COMMIT_SHORT_SHA`.
+- Оба образа собираются с BuildKit registry cache (`--cache-from`/`--cache-to type=registry,ref=...:buildcache,mode=max`) - слои переиспользуются между runner'ами без локального диска.
+
+**Реестр и аутентификация.** Container Registry - **Yandex Container Registry**, создаётся Terraform'ом ([infra/terraform/yc/bootstrap/registry.tf](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/terraform/yc/bootstrap/registry.tf)). CI-job обменивает GitLab OIDC JWT на короткоживущий YC IAM-токен и логинится в `cr.yandex` через `docker login --username iam` (шаблон `.yc-auth` в `.gitlab-ci.yml`). Долгоживущих учётных данных для реестра нет.
 
 **Пайплайн.** [pandora_box/.gitlab-ci.yml](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box/-/blob/master/.gitlab-ci.yml) описывает 5 стадий: `lint → test → build → system → deploy`.
 
@@ -412,6 +416,10 @@ flowchart TB
 
   ![CI pipeline green](screenshots/12-app/01-ci-pipeline.png)
 
+- **Образы в YC Container Registry.** В реестре лежат оба образа: `pandora_box-rocksdb:latest` (cache-образ с предварительно собранным RocksDB-NIF) и `pandora_box:<sha>` (per-commit образ приложения):
+
+  ![YC Container Registry: pandora_box images](screenshots/12-app/02-yc-registry.png)
+
 - **Job `deploy` - `helm upgrade --install` через GitLab Agent.** Лог job'а показывает применение чарта, `kubectl rollout restart` (на случай если ESO обновил секреты извне) и `kubectl rollout status statefulset/pandora-box` как явный gate на успех:
 
   ![deploy job log + rollout status](screenshots/12-app/03-deploy-job-output.png)
@@ -426,28 +434,36 @@ flowchart TB
   ![Grafana Explore: pandora-box BEAM memory](screenshots/13-testing/02-monitoring-pandora-memore-dashboard.png)
   ![Grafana pandora-box pods view](screenshots/13-testing/04-monitoring-pandora-pods.png)
 
-**Соответствует пунктам сдачи:** 2, 4.
-
 ---
 
-## Что предоставлено для сдачи
+## Заключение
 
-| # | Требование | Где |
-|---|---|---|
-| 1 | Репозиторий с Terraform-конфигурациями + готовность продемонстрировать создание с нуля | [infra-pandora-box](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box) + см. [infra/scripts/bootstrap-from-scratch.sh](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/blob/master/infra/scripts/bootstrap-from-scratch.sh) |
-| 2 | Atlantis-комментарии в MR | _<TBD: ссылка на пример MR>_ |
-| 3 | Ansible-конфигурация (Kubespray) | [infra-pandora-box/infra/ansible/kubespray/](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/ansible/kubespray) |
-| 4 | Dockerfile тестового приложения + ссылка на образ | [laura.grechenko.pandora_box](https://gitlab.com/laura.grechenko.erlang-group/laura.grechenko.pandora_box) + `cr.yandex/.../pandora_box:<tag>` |
-| 5 | Конфигурация Kubernetes-кластера | [infra-pandora-box/infra/k8s/](https://gitlab.com/laura.grechenko.erlang-group/infra-pandora-box/-/tree/master/infra/k8s) |
-| 6 | URL приложения + URL Grafana с учётными данными | _<TBD>_ |
-| 7 | Все репозитории на одной площадке | gitlab.com (laura.grechenko.erlang-group) |
+**Сделано:**
+
+- Облачная инфраструктура через Terraform: OIDC WIF вместо долгоживущих ключей, минимальные права у SA, tfstate в S3-бакете с KMS.
+- Self-hosted Kubernetes через Kubespray, 3 master + 2 worker на прерываемых ВМ.
+- Тестовое приложение (Pandora Box) с двухступенчатой сборкой образа в Yandex Container Registry.
+- Мониторинг (kube-prometheus-stack) с дашбордами и HTTP-доступом к Grafana через ingress NLB.
+- CI/CD с auto-on-tag сборкой и деплоем через GitLab Agent.
+- GitOps-flow для основной инфраструктуры: Atlantis применяет `main/` и `pandora-box/` через комментарии в MR.
+
+**Не сделано (отложено за рамки дипломного срока):**
+
+- **DNS.** В текущей работе доступ по IP NLB.
+- **TLS / cert-manager.** HTTPS не настроен, всё на :80. Зависит от DNS.
 
 ---
 
 ## Известные компромиссы
 
-Решения, в которых выбран прагматичный, но не идеальный путь, - зафиксированы здесь, чтобы было видно, что они приняты осознанно.
+- **Addons (ESO, CSI, Envoy Gateway, monitoring) ставятся CI-job'ами, а не GitOps-инструментом.** Каждый `addons:*` job через GitLab Agent делает `helm install` / `kubectl apply` - императивный процесс поверх декларативного Kubernetes. Изменение addon'а - это правка `.gitlab-ci.yml` и ручной запуск job'а, а не PR с желаемым состоянием. Естественнее был бы ArgoCD или Flux (кластер непрерывно сводится к состоянию из репозитория), но миграция в дипломный срок не укладывается.
 
-- **Двойная поверхность хранения для секретов Atlantis.** `ATLANTIS_GITLAB_TOKEN` и `ATLANTIS_WEBHOOK_SECRET` живут одновременно в CI vars и в Lockbox: CI-job `seed:atlantis-lockbox` копирует значения из CI vars в Lockbox. Такая схема выбрана ради удобной ротации (без `yc` CLI); цена - удвоенная поверхность хранения.
+- **Пайплайны на push - ручные (grey jobs), auto только на tag - ради экономии free CI minutes.** GitLab.com даёт 400 CI-минут в месяц на free tier, а каждая полная сборка `build:rocksdb-cache` + `build:image` + `test:system` съедает заметную долю лимита. Поэтому push в feature-ветку или в `master` показывает все job'ы как manual-кнопки (`.rules-any-branch-manual`, `.rules-master-manual`); автоматически срабатывает только tag-pipeline (`git tag vX.Y.Z && git push --tags` → `lint → test:elixir + test:external → build:image → test:system → deploy`). Это закрывает требование задания «сборка автоматически по тегу» и одновременно удерживает расход CI-минут в рамках лимита.
 
-- **Пайплайны на push - ручные (grey jobs), auto только на tag - ради экономии free CI minutes.** GitLab.com даёт 400 CI-минут в месяц на free tier, а каждая полная сборка `build:rocksdb-cache` + `build:image` + `test:system` съедает заметную долю лимита. Поэтому push в feature-ветку или в `master` показывает все job'ы как manual-кнопки (`.rules-any-branch-manual`, `.rules-master-manual`); автоматически срабатывает только tag-pipeline (`git tag vX.Y.Z && git push --tags` → `lint → test:elixir + test:external → build:image → test:system → deploy`). Это закрывает требование задания «сборка автоматически по тегу» и одновременно удерживает расход CI-минут в рамках лимита (релизы - редкое событие). Полный вид *ручных* пайплайнов на push в `master` - [screenshots/00-notes/pbx-infra-pipeline.png](screenshots/00-notes/pbx-infra-pipeline.png) (infra) и [screenshots/00-notes/pbx-pipeline.png](screenshots/00-notes/pbx-pipeline.png) (приложение).
+  Полный вид *ручных* пайплайнов на push в `master` - infra-репозиторий:
+
+  ![Manual pipeline · infra-pandora-box](screenshots/00-notes/pbx-infra-pipeline.png)
+
+  И репозиторий приложения:
+
+  ![Manual pipeline · pandora_box](screenshots/00-notes/pbx-pipeline.png)

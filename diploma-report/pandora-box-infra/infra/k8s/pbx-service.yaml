@@ -1,0 +1,45 @@
+# Headless service for StatefulSet DNS resolution and Erlang clustering.
+# Each pod gets a stable DNS name: pandora-box-N.pandora-box.<ns>.svc.cluster.local
+apiVersion: v1
+kind: Service
+metadata:
+  name: pandora-box
+  namespace: pandora-box
+  labels:
+    app: pandora-box
+spec:
+  clusterIP: None
+  selector:
+    app: pandora-box
+  ports:
+    - name: epmd
+      port: 4369
+      targetPort: 4369
+    - name: lid
+      port: 4000
+      targetPort: 4000
+    - name: portal
+      port: 4001
+      targetPort: 4001
+
+---
+# Regular service for load-balanced access to the web UI and API.
+# Use this as the target for an Ingress or LoadBalancer.
+apiVersion: v1
+kind: Service
+metadata:
+  name: pandora-box-web
+  namespace: pandora-box
+  labels:
+    app: pandora-box
+spec:
+  type: ClusterIP
+  selector:
+    app: pandora-box
+  ports:
+    - name: lid
+      port: 4000
+      targetPort: 4000
+    - name: portal
+      port: 4001
+      targetPort: 4001

@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.headlessName }}
+  namespace: {{ include "pandora-box.namespace" . }}
+  labels:
+    {{- include "pandora-box.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "pandora-box.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: epmd
+      port: {{ .Values.service.ports.epmd }}
+      targetPort: {{ .Values.service.ports.epmd }}
+    - name: lid
+      port: {{ .Values.service.ports.lid }}
+      targetPort: {{ .Values.service.ports.lid }}
+    - name: portal
+      port: {{ .Values.service.ports.portal }}
+      targetPort: {{ .Values.service.ports.portal }}
+    - name: metrics
+      port: {{ .Values.service.ports.metrics }}
+      targetPort: {{ .Values.service.ports.metrics }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.webName }}
+  namespace: {{ include "pandora-box.namespace" . }}
+  labels:
+    {{- include "pandora-box.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "pandora-box.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: lid
+      port: {{ .Values.service.ports.lid }}
+      targetPort: {{ .Values.service.ports.lid }}
+    - name: portal
+      port: {{ .Values.service.ports.portal }}
+      targetPort: {{ .Values.service.ports.portal }}

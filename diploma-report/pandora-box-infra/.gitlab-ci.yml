@@ -1,0 +1,305 @@
+# Run only one pipeline per commit: prefer MR pipelines when an MR exists,
+# tag pipelines for releases, otherwise a branch pipeline. This prevents
+# duplicate (branch + MR) pipelines.
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+variables:
+  # Container registry host is fixed; the registry ID + image path live in the
+  # IMAGE_REPO CI variable (Settings → CI/CD → Variables) because the registry
+  # ID is regenerated on every infra from-scratch bootstrap. Build/test jobs
+  # docker-login via OIDC → YC IAM token (see .yc-auth); the in-cluster
+  # image-pull Secret (yc-registry) is synced from Lockbox by ESO — no CI
+  # involvement.
+  REGISTRY_HOST: "cr.yandex"
+  ROCKSDB_CACHE_IMAGE: "$IMAGE_REPO-rocksdb:latest"
+
+stages:
+  - lint
+  - test
+  - build
+  - system
+  - deploy
+
+# ─── Rule templates ──────────────────────────────────────────────────────────
+# Two manual gates: checks safe on any branch (lint, unit tests), and
+# "everything else" (builds, system test, deploy) which only make sense against
+# master — images get tagged from master commits, YC WIF is bound to a master
+# subject, and deploy targets prod. Both keep allow_failure: true so a
+# skipped/un-clicked upstream doesn't block the pipeline status — every job is
+# a deliberate click anyway.
+.rules-any-branch-manual:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
+
+# Release-gate lane for checks: auto on tag (no allow_failure → real gate that
+# blocks deploy), manual on any branch. Used by lint/test/test:external so a
+# tagged release runs the full check suite before shipping, but day-to-day
+# branch work keeps them as click-to-run buttons.
+.rules-any-branch-manual-or-tag-auto:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: on_success
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: manual
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH
+      when: manual
+      allow_failure: true
+
+.rules-master-manual:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+
+# Release lane: auto on tag, manual on master. Used by build:image, test:system,
+# and deploy so `git tag vX.Y.Z && git push --tags` builds + ships without a
+# click, while pushes to master keep the manual gate. allow_failure: true
+# matters only on master (skipped manual job) — on a tag pipeline the job
+# auto-runs and a real failure surfaces normally.
+.rules-master-manual-or-tag-auto:
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+
+# Workload Identity Federation: exchange the GitLab-issued OIDC JWT for a
+# short-lived YC IAM token (~1h), then docker-login to cr.yandex with it.
+# Jobs that need to push/pull from the registry should `extends: .yc-auth`
+# and pull the before_script back in via `!reference` if they have their
+# own before_script steps (buildx, deps install, etc.).
+.yc-auth:
+  id_tokens:
+    YC_JWT:
+      aud: https://auth.yandex.cloud/oauth/token
+  before_script:
+    - apk add --no-cache curl jq
+    - |
+      YC_TOKEN=$(curl -sSf -X POST \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        --data-urlencode "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+        --data-urlencode "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
+        --data-urlencode "audience=${YC_SA_ID}" \
+        --data-urlencode "subject_token=${YC_JWT}" \
+        --data-urlencode "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
+        https://auth.yandex.cloud/oauth/token | jq -r .access_token)
+      export YC_TOKEN
+    - echo "$YC_TOKEN" | docker login --username iam --password-stdin "$REGISTRY_HOST"
+
+.elixir:
+  image: elixir:1.19.3-alpine
+  variables:
+    MIX_ENV: test
+    MIX_HOME: "$CI_PROJECT_DIR/.mix"
+    HEX_HOME: "$CI_PROJECT_DIR/.hex"
+  cache:
+    - key:
+        files:
+          - mix.lock
+      when: always
+      paths:
+        - deps/
+        - _build/
+        - .mix/
+        - .hex/
+        - .plts/
+    # RocksDB NIF takes minutes to compile from C++ source. Cache only
+    # the build artifacts (not the full dep) with a stable key that
+    # survives mix.lock changes. Bump the suffix when upgrading rocksdb.
+    - key: rocksdb-nif-v1
+      when: always
+      paths:
+        - deps/rocksdb/_build/
+        - deps/rocksdb/priv/
+  before_script:
+    - apk add --no-cache git build-base linux-headers cmake snappy-dev zlib-dev bzip2-dev lz4-dev zstd-dev sqlite docker-cli
+    - mkdir -p /usr/include/sys && ln -sf /usr/include/unistd.h /usr/include/sys/unistd.h
+    - mix local.hex --force
+    - mix local.rebar --force
+    - mix deps.get --only $MIX_ENV
+
+lint:elixir:
+  extends: [.elixir, .rules-any-branch-manual-or-tag-auto]
+  stage: lint
+  script:
+    - mix compile --warnings-as-errors --force
+    - mix format --check-formatted
+    - mix deps.unlock --check-unused
+    - mix credo
+    - mix hex.audit
+
+test:elixir:
+  extends: [.elixir, .rules-any-branch-manual-or-tag-auto]
+  stage: test
+  script:
+    - mix test
+
+test:external:
+  extends: [.elixir, .rules-any-branch-manual-or-tag-auto]
+  stage: test
+  services:
+    - name: minio/minio:latest
+      alias: minio
+      command: ["server", "/data"]
+  variables:
+    MIX_ENV: test
+    MIX_HOME: "$CI_PROJECT_DIR/.mix"
+    HEX_HOME: "$CI_PROJECT_DIR/.hex"
+    MINIO_ROOT_USER: minioadmin
+    MINIO_ROOT_PASSWORD: minioadmin
+    MINIO_HOST: minio
+    MINIO_PORT: "9000"
+    MINIO_ACCESS_KEY: minioadmin
+    MINIO_SECRET_KEY: minioadmin
+  script:
+    - mix test --only external
+
+build:rocksdb-cache:
+  extends: [.yc-auth, .rules-master-manual]
+  stage: build
+  image: docker:24.0.5
+  # Don't wait for the manual lint/test stages — build is independent.
+  needs: []
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - !reference [.yc-auth, before_script]
+    - docker buildx create --use --driver docker-container
+  script:
+    - |
+      docker buildx build \
+        -f Dockerfile.rocksdb \
+        --platform linux/amd64 \
+        --cache-from "type=registry,ref=$IMAGE_REPO-rocksdb:buildcache" \
+        --cache-to "type=registry,ref=$IMAGE_REPO-rocksdb:buildcache,mode=max" \
+        --build-arg BUILD_CORES=$(nproc) \
+        -t "$ROCKSDB_CACHE_IMAGE" \
+        --push \
+        .
+
+build:image:
+  extends: [.yc-auth, .rules-master-manual-or-tag-auto]
+  stage: build
+  image: docker:24.0.5
+  # Run in parallel with lint/test — build is independent. Deploy is the gate
+  # that requires both (see deploy.needs).
+  needs: []
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    IMAGE: "$IMAGE_REPO:$CI_COMMIT_SHORT_SHA"
+    CACHE_REF: "$IMAGE_REPO:buildcache"
+  before_script:
+    - !reference [.yc-auth, before_script]
+    - docker buildx create --use --driver docker-container
+  script:
+    - |
+      docker buildx build \
+        --platform linux/amd64 \
+        --cache-from "type=registry,ref=$CACHE_REF" \
+        --cache-to "type=registry,ref=$CACHE_REF,mode=max" \
+        --build-arg BUILD_CORES=$(nproc) \
+        --build-arg ROCKSDB_CACHE_IMAGE=$ROCKSDB_CACHE_IMAGE \
+        -t "$IMAGE" \
+        --push \
+        .
+
+test:system:
+  extends:
+    - .elixir
+    - .yc-auth
+    - .rules-master-manual-or-tag-auto
+  stage: system
+  needs:
+    - build:image
+  services:
+    - name: docker:24.0.5-dind
+      alias: pbx-system-test
+  variables:
+    MIX_ENV: test
+    MIX_HOME: "$CI_PROJECT_DIR/.mix"
+    HEX_HOME: "$CI_PROJECT_DIR/.hex"
+    DOCKER_HOST: "tcp://pbx-system-test:2375"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_TEST_HOST: pbx-system-test
+    IMAGE: "$IMAGE_REPO:$CI_COMMIT_SHORT_SHA"
+    DOCKER_SYSTEM_TEST_IMAGE: "$IMAGE_REPO:$CI_COMMIT_SHORT_SHA"
+  before_script:
+    - !reference [.elixir, before_script]
+    - !reference [.yc-auth, before_script]
+    - docker info
+    - docker pull "$IMAGE"
+  script:
+    - mix test apps/system_tests/test/system --include system --trace
+  artifacts:
+    when: on_failure
+    expire_in: 1 hour
+    paths:
+      - tmp/system_test_logs/
+
+deploy:
+  extends: .rules-master-manual-or-tag-auto
+  stage: deploy
+  image:
+    name: dtzar/helm-kubectl:latest
+    entrypoint: [""]
+  # On a tag pipeline lint, both unit suites, build:image, and test:system all
+  # auto-run; gating deploy on every one of them turns the release flow into a
+  # real check pyramid: lint + tests + system + build → deploy. Without these
+  # `needs:`, deploy would start as soon as build:image succeeds, in parallel
+  # with the still-running checks. On master pushes deploy stays manual, so
+  # `needs:` just enforces click-order.
+  needs:
+    - lint:elixir
+    - test:elixir
+    - test:external
+    - build:image
+    - test:system
+  variables:
+    CHART_PATH: "infra/helm/pandora-box"
+    RELEASE_NAME: "pandora-box"
+    NAMESPACE: "pandora-box"
+    KUBE_CONTEXT: "laura.grechenko.erlang-group/infra-pandora-box:pandora-k8s"
+  script:
+    - kubectl config use-context "$KUBE_CONTEXT"
+    # Ensure the namespace exists before we write Secrets into it.
+    - kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+    # Sync app secrets from CI variables into K8s secret. Managed out-of-band
+    # so the chart is rendered with secrets.create=false in prod. The other
+    # two Secrets the StatefulSet consumes (backups-s3, yc-registry) are
+    # owned by ESO — synced from Lockbox, no CI involvement.
+    - kubectl -n "$NAMESPACE" create secret generic pandora-box
+        --from-literal=SECRET_KEY_BASE="$SECRET_KEY_BASE"
+        --from-literal=API_TOKEN_PEPPER="$API_TOKEN_PEPPER"
+        --from-literal=RELEASE_COOKIE="$RELEASE_COOKIE"
+        --from-literal=PANDORA_KEK="$PANDORA_KEK"
+        --from-literal=PBX_INIT_SECRET="$PBX_INIT_SECRET"
+        --dry-run=client -o yaml | kubectl apply -f -
+    - helm upgrade --install "$RELEASE_NAME" "$CHART_PATH"
+        --namespace "$NAMESPACE"
+        --create-namespace
+        -f "$CHART_PATH/values-prod.yaml"
+        --set image.repository="$IMAGE_REPO"
+        --set image.tag="$CI_COMMIT_SHORT_SHA"
+    # Secret values are injected as env vars, which are baked in at pod
+    # creation time. Force a rolling restart so pods pick up any out-of-band
+    # changes to pandora-box (CI-managed) or backups-s3 / yc-registry
+    # (ESO-reconciled). On first install this is a harmless no-op.
+    - kubectl -n "$NAMESPACE" rollout restart statefulset/pandora-box
+    - kubectl -n "$NAMESPACE" rollout status statefulset/pandora-box --timeout=300s

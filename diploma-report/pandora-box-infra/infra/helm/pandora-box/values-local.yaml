@@ -1,0 +1,14 @@
+# Local dev overrides. Build the image on the host or inside minikube:
+#   docker build -t internal/pandora_box:dev .
+#   minikube image load internal/pandora_box:dev   # if built outside minikube
+#
+# Install:
+#   helm upgrade --install pandora-box infra/helm/pandora-box \
+#     -n pandora-box --create-namespace \
+#     -f infra/helm/pandora-box/values-local.yaml
+
+image:
+  repository: internal/pandora_box
+  tag: dev
+  pullPolicy: Never
+  pullSecrets: []

@@ -1,0 +1,23 @@
+Release {{ .Release.Name }} installed in namespace {{ .Release.Namespace }}.
+
+Image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+Replicas: {{ .Values.replicaCount }}
+Phoenix host: {{ .Values.phoenix.host }} ({{ .Values.phoenix.scheme }})
+
+{{- if eq .Values.phoenix.scheme "http" }}
+
+============================================================
+  SECURITY WARNING — INSECURE TRANSPORT
+============================================================
+  phoenix.scheme = "http"
+
+  The app is reachable over cleartext HTTP. Credentials, API
+  tokens, and any secret values you read or write will travel
+  in cleartext and can be intercepted on the network path.
+
+  TLS enforcement is the gateway's responsibility. Provision
+  a TLS listener on the Envoy Gateway (cert-manager + Let's
+  Encrypt, or a managed cert) and flip phoenix.scheme back
+  to "https" before putting any real data into this cluster.
+============================================================
+{{- end }}
